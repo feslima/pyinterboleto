@@ -1,4 +1,5 @@
 import re
+from datetime import date
 from pathlib import Path
 from typing import Optional
 
@@ -44,3 +45,7 @@ def check_response(response: Response,
         raise ValueError(msg)
 
     return contents
+
+
+def str_to_date(value: str):
+    return date.fromisoformat(value)
