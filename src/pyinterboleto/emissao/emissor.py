@@ -48,7 +48,7 @@ class Emissao:
     mensagem: Mensagem = field(default=MENSAGEM_VAZIA)
 
     def __post_init__(self):
-        assert len(self.seuNumero) <= 15
+        assert len(self.seuNumero) <= 15 and self.seuNumero != ''
 
         self.cnpjCPFBeneficiario = strip_chars(self.cnpjCPFBeneficiario)
         if len(self.cnpjCPFBeneficiario) == 11:

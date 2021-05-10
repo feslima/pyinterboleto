@@ -1,46 +1,56 @@
 from pathlib import Path
-from typing import TypedDict, Union
+from typing import TypedDict
 
 from requests import post
 
-from ..utils.sanitize import strip_chars
+from ..utils.requests import RequestConfigs
+from ..utils.sanitize import check_file, check_response, strip_chars
 from .emissor import Emissao
 
 _API_URL = 'https://apis.bancointer.com.br:8443/openbanking/v1/certificado/boletos'
 
 
 class BoletoResponse(TypedDict):
+    """Dicionário que descreve o resultado de uma emissão de boleto bem 
+    sucedida.
+
+    Parameters
+    ----------
+    seuNumero: str
+        Seu Número enviado na requisição para inclusão do título.
+
+    nossoNumero: str
+        Nosso Número atribuído automaticamente ao longo da inclusão do título.
+
+    codigoBarras: str
+        44 posições preenchidas com os dígitos que compõem o código de barras 
+        do boleto.
+
+    linhaDigitavel: str
+        47 posições preenchidas com os dígitos que compõem a linha digitável do 
+        boleto, sem formatação.
+
+    """
     seuNumero: str
     nossoNumero: str
     codigoBarras: str
     linhaDigitavel: str
 
 
-PathType = Union[str, Path]
-
-
 class Boleto:
-    def __init__(self, dados: Emissao, conta_inter: str, cert_path: PathType,
-                 key_path: PathType) -> None:
-        self._conta_inter = strip_chars(conta_inter)
+    def __init__(self, dados: Emissao, configs: RequestConfigs) -> None:
+        self._conta_inter = strip_chars(configs['conta_inter'])
         self._dados = dados
         self._emitido: bool = False
+        self._numero: str = ''
 
         self._headers = {
             'content-type': 'application/json',
             'x-inter-conta-corrente': self.conta_inter
         }
 
-        self._cert: Path = self._check_file(cert_path)
-        self._key: Path = self._check_file(key_path)
-
-    def _check_file(self, path_str: str) -> Path:
-        path = Path(path_str).resolve()
-
-        if not path.exists() and not path.is_file():
-            raise FileNotFoundError(f"'{path_str}' não é um arquivo válido.")
-
-        return path
+        self._cert: Path = check_file(configs['cert'])
+        self._key: Path = check_file(configs['key'])
 
     @property
     def dados(self) -> Emissao:
@@ -49,6 +59,14 @@ class Boleto:
     @property
     def emitido(self) -> bool:
         return self._emitido
+
+    @property
+    def numero(self) -> str:
+        """Número de identificação que identifica o boleto na API.
+
+        Se o boleto ainda não foi emitido, essa propriedade é um string vazio.
+        """
+        return self._numero
 
     @property
     def conta_inter(self) -> str:
@@ -67,13 +85,9 @@ class Boleto:
                         headers=self._headers,
                         cert=(self.certificate, self.key))
 
-        contents = response.json()
+        contents = check_response(response, "Boleto não foi emitido")
 
-        if response.status_code != 200:
-            api_err = contents['message']
-            msg = f"Boleto não foi emitido.\nMotivo: '{api_err}'"
-
-            raise ValueError(msg)
-
+        result = BoletoResponse(**contents)
         self._emitido = True
-        return BoletoResponse(**contents)
+        self._numero = result['nossoNumero']
+        return result

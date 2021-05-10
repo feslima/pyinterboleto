@@ -5,7 +5,7 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Python: emissao",
+            "name": "Python: Current file",
             "type": "python",
             "request": "launch",
             "program": "${file}",
