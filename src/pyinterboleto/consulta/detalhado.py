@@ -6,8 +6,8 @@ from requests import get
 from ..emissao.desconto import Desconto
 from ..emissao.mora import Mora
 from ..emissao.multa import Multa
-from ..utils.requests import RequestConfigs
-from ..utils.sanitize import check_file, check_response, strip_chars
+from ..utils.requests import RequestConfigs, get_api_configs
+from ..utils.sanitize import check_response
 from ..utils.url import API_URL
 
 
@@ -88,12 +88,12 @@ def get_boleto_detail(nosso_numero: str, configs: RequestConfigs) \
     BoletoDetail
         Dicionário de representação detalhada de um boleto.
     """
-    headers = {'x-inter-conta-corrente': strip_chars(configs['conta_inter'])}
-    cert = str(check_file(configs['cert']))
-    key = str(check_file(configs['key']))
+    acc, certificate, key = get_api_configs(configs)
+
+    headers = {'x-inter-conta-corrente': acc}
 
     URL = API_URL + f'/{nosso_numero}'
-    response = get(URL, headers=headers, cert=(cert, key))
+    response = get(URL, headers=headers, cert=(certificate, key))
 
     contents = check_response(response, "Boleto não encontrado.")
 

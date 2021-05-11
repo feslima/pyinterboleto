@@ -2,6 +2,7 @@ from datetime import date
 from io import BytesIO
 from typing import Optional, Union, overload
 
+from .baixa import CodigoBaixaEnum, executa_baixa
 from .consulta.detalhado import BoletoDetail, get_boleto_detail
 from .consulta.lista import (FiltrarEnum, OrdenarEnum, ResponseList,
                              get_lista_boletos)
@@ -30,12 +31,22 @@ class Boleto:
     Ou seja, múltiplas consultas detalhadas com a mesma instância são 
     permitidas, e emissão só é permitida uma vez por instância e que não tenha 
     havido consultas detalhadas prévias.
+
     """
 
     def __init__(self, configs: RequestConfigs) -> None:
         self._configs = configs
         self._emitido: bool = False
         self._numero: str = ''
+
+    def __str__(self) -> str:
+        numero = self.numero if self.numero != '' else 'não tem'
+        foi_emitido = 'sim' if self.emitido else 'não'
+        emissivel = 'sim' if self.pode_emitir else 'não'
+        string = (f"Número: {numero}\nFoi emitido: {foi_emitido}\n"
+                  f"É emissivel: {emissivel}")
+
+        return string
 
     @property
     def configs(self) -> RequestConfigs:
@@ -44,6 +55,10 @@ class Boleto:
     @property
     def emitido(self) -> bool:
         return self._emitido
+
+    @property
+    def pode_emitir(self) -> bool:
+        return self._numero == '' and not self.emitido
 
     @property
     def numero(self) -> str:
@@ -79,8 +94,45 @@ class Boleto:
         ValueError
             Caso esta instância já tenha emitido ou consultado detalhadamente 
             algum boleto.
+
+        Examples
+        --------
+        >>> from pathlib import Path
+        >>> from datetime import date, timedelta
+        >>> from pprint import pprint
+        >>> from pyinterboleto import Boleto, Emissao, Pagador, RequestConfigs
+        >>> direc = Path('caminho/para/pasta/com/certificados')
+        >>> cert = direc / 'Inter API_Certificado.crt'
+        >>> key = direc / 'Inter API_Chave.key'
+        >>> acc = '12345678'
+        >>> configs = RequestConfigs(conta_inter=acc, certificate=cert, key=key)
+        >>> boleto = Boleto(configs)
+        >>> pagador = Pagador(
+        ...     tipoPessoa='FISICA',
+        ...     cnpjCpf='123.456.789-09',
+        ...     nome="Pessoa Ficticia da Silva",
+        ...     endereco="Rua Fantasia",
+        ...     numero='300',
+        ...     bairro='Centro',
+        ...     cidade='São Paulo',
+        ...     uf='SP',
+        ...     cep='123456-789'
+        ... )
+        ... emissao = Emissao(
+        ...     pagador=pagador, seuNumero='00001',
+        ...     cnpjCPFBeneficiario='12.345.678/0001-01',
+        ...     valorNominal=0.01,
+        ...     dataEmissao=date.today(),
+        ...     dataVencimento=date.today()+timedelta(days=2)
+        ... )
+        >>> result = boleto.emitir(emissao)
+        >>> print(result)
+        {'seuNumero': '00001', 'nossoNumero': '00123456789', 
+         'codigoBarras': '00000000000000000000000000000000000000000000', 
+         'linhaDigitavel': '00000000000000000000000000000000000000000000000'}
+
         """
-        if self.emitido or self.numero != '':
+        if not self.pode_emitir:
             raise ValueError("Este boleto já foi emitido.")
 
         result = emitir_boleto(dados, self.configs)
@@ -108,6 +160,47 @@ class Boleto:
         Notes
         -----
         Emissões não podem ser feitas após a chamada deste método.
+
+        Examples
+        --------
+        >>> from pathlib import Path
+        >>> from pprint import pprint
+        >>> from pyinterboleto import Boleto, RequestConfigs
+        >>> direc = Path('caminho/para/pasta/com/certificados')
+        >>> cert = direc / 'Inter API_Certificado.crt'
+        >>> key = direc / 'Inter API_Chave.key'
+        >>> acc = '12345678'
+        >>> configs = RequestConfigs(conta_inter=acc, certificate=cert, key=key)
+        >>> boleto = Boleto(configs)
+        >>> num_boleto = '00123456789'
+        >>> detail = boleto.consulta_detalhada(num_boleto)
+        >>> pprint(detail)
+        {'cnpjCpfBeneficiario': '00000000000000',
+         'cnpjCpfPagador': '12345678909',
+         'codigoBarras': '00000000000000000000000000000000000000000000',
+         'codigoEspecie': 'OUTROS',
+         'dataEmissao': '01/05/2021',
+         'dataHoraSituacao': '01/05/2021 15:22',
+         'dataLimitePagamento': '11/06/2021',
+         'dataVencimento': '12/05/2021',
+         'dddPagador': '',
+         'desconto1': Desconto(codigoDesconto=<CodigoDescontoEnum.NTD: 'NAOTEMDESCONTO'>, taxa=0.0, valor=0.0, data=''),
+         'desconto2': Desconto(codigoDesconto=<CodigoDescontoEnum.NTD: 'NAOTEMDESCONTO'>, taxa=0.0, valor=0.0, data=''),
+         'desconto3': Desconto(codigoDesconto=<CodigoDescontoEnum.NTD: 'NAOTEMDESCONTO'>, taxa=0.0, valor=0.0, data=''),
+         'emailPagador': '',
+         'linhaDigitavel': '00000000000000000000000000000000000000000000000',
+         'mora': Mora(codigoMora=<CodigoMoraEnum.I: 'ISENTO'>, taxa=0.0, valor=0.0, data=''),
+         'multa': Multa(codigoMulta=<CodigoMultaEnum.NTM: 'NAOTEMMULTA'>, taxa=0.0, valor=0.0, data=''),
+         'nomeBeneficiario': 'NOME DO BENEFICIARIO CONTA PJ',
+         'nomePagador': 'Pessoa Ficticia da Silva',
+         'seuNumero': '00001',
+         'situacao': 'EMABERTO',
+         'telefonePagador': '',
+         'tipoPessoaBeneficiario': 'JURIDICA',
+         'tipoPessoaPagador': 'FISICA',
+         'valorAbatimento': 0.0,
+         'valorNominal': 0.01}
+
         """
         detail = get_boleto_detail(nosso_numero, self.configs)
         self._numero = nosso_numero
@@ -140,6 +233,22 @@ class Boleto:
 
             Se `filename` for especificado (not None), não há retorno desta 
             função.
+
+        Examples
+        --------
+        >>> from pathlib import Path
+        >>> from pyinterboleto import Boleto, RequestConfigs
+        >>> direc = Path('caminho/para/pasta/com/certificados')
+        >>> cert = direc / 'Inter API_Certificado.crt'
+        >>> key = direc / 'Inter API_Chave.key'
+        >>> acc = '12345678'
+        >>> configs = RequestConfigs(conta_inter=acc, certificate=cert, key=key)
+        >>> boleto = Boleto(configs)
+        >>> num_boleto = '00123456789'
+        >>> pdf = boleto.consulta_pdf(num_boleto)
+        >>> print(pdf)
+        <_io.BytesIO object at 0x7fab0c068220>
+
         """
         pdf: Union[None, BytesIO]
         if filename is None:
@@ -164,10 +273,14 @@ class Boleto:
         Parameters
         ----------
         data_inicial : date
-            Data de início para o filtro.
+            Data de início para o filtro. Esta data corresponde a data de 
+            vencimento dos títulos. Isto é, a filtragem vai incluir títulos com
+            data de vencimento A PARTIR desta data.
 
         data_final : date
-            Data de fim para o filtro.
+            Data de fim para o filtro. Esta data corresponde a data de 
+            vencimento dos títulos. Isto é, a filtragem vai incluir títulos com
+            data de vencimento ATÉ esta data.
 
         filtrar : Optional[FiltrarEnum], optional
             Opção para situação atual do boleto, None caso não seja 
@@ -187,8 +300,95 @@ class Boleto:
         -------
         ResponseList
             Resultado da busca.
+
+        Examples
+        --------
+        >>> from pathlib import Path
+        >>> from pprint import pprint
+        >>> from datetime import date, timedelta
+        >>> from pyinterboleto import Boleto, RequestConfigs
+        >>> direc = Path('caminho/para/pasta/com/certificados')
+        >>> cert = direc / 'Inter API_Certificado.crt'
+        >>> key = direc / 'Inter API_Chave.key'
+        >>> acc = '12345678'
+        >>> configs = RequestConfigs(conta_inter=acc, certificate=cert, key=key)
+        >>> boleto = Boleto(configs)
+        >>> inicial = date.today() - timedelta(days=30)
+        >>> final = date.today()
+        >>> lista = boleto.consulta_lista(inicial, final)
+        >>> pprint(lista)
+        {'content': [{'cnpjCpfSacado': '12345678909',
+            'dataEmissao': '09/01/2021',
+            'dataLimite': '10/02/2021',
+            'dataVencimento': '21/01/2021',
+            'desconto1': {'codigo': 'NAOTEMDESCONTO',
+                        'taxa': 0.0,
+                        'valor': 0.0},
+            'desconto2': {'codigo': 'NAOTEMDESCONTO',
+                        'taxa': 0.0,
+                        'valor': 0.0},
+            'desconto3': {'codigo': 'NAOTEMDESCONTO',
+                        'taxa': 0.0,
+                        'valor': 0.0},
+            'email': '',
+            'linhaDigitavel': '00000000000000000000000000000000000000000000000',
+            'mora': {'codigo': 'ISENTO', 'taxa': 0.0, 'valor': 0.0},
+            'multa': {'codigo': 'NAOTEMMULTA', 'taxa': 0.0, 'valor': 0.0},
+            'nomeSacado': 'Pessoa Ficticia da Silva',
+            'nossoNumero': '00000000000',
+            'seuNumero': '00001',
+            'situacao': 'EMABERTO',
+            'telefone': '',
+            'valorAbatimento': 0.0,
+            'valorJuros': 0.0,
+            'valorMulta': 0.0,
+            'valorNominal': 0.01}],
+            'first': True,
+            'last': True,
+            'numberOfElements': 1,
+            'size': 20,
+            'summary': {'baixados': {'quantidade': 0, 'valor': 0},
+                        'expirados': {'quantidade': 0, 'valor': 0},
+                        'previstos': {'quantidade': 1, 'valor': 0.01},
+                        'recebidos': {'quantidade': 0, 'valor': 0}},
+            'totalElements': 1,
+            'totalPages': 1}
+
         """
         lista = get_lista_boletos(data_inicial, data_final, self.configs,
                                   filtrar=filtrar, ordernar=ordernar,
                                   page=page, size=size)
         return lista
+
+    def baixar_boleto(self, nosso_numero: str, codigo_baixa: CodigoBaixaEnum) \
+            -> None:
+        """Executa a baixa de um boleto.
+
+        O registro da baixa é realizado no padrão D+1, ou seja, os boletos 
+        baixados na data atual só serão baixados na base centralizada partir do 
+        dia seguinte.
+
+        Parameters
+        ----------
+        nosso_numero : str
+            Número identificador do título.
+
+        codigo_baixa : CodigoBaixaEnum
+            Domínio que descreve o tipo de baixa sendo solicitado.
+
+        Examples
+        --------
+        >>> from pathlib import Path
+        >>> from pprint import pprint
+        >>> from pyinterboleto import Boleto, RequestConfigs, CodigoBaixaEnum
+        >>> direc = Path('caminho/para/pasta/com/certificados')
+        >>> cert = direc / 'Inter API_Certificado.crt'
+        >>> key = direc / 'Inter API_Chave.key'
+        >>> acc = '12345678'
+        >>> configs = RequestConfigs(conta_inter=acc, certificate=cert, key=key)
+        >>> boleto = Boleto(configs)
+        >>> num_boleto = '00123456789'
+        >>> boleto.baixar_boleto(num_boleto, CodigoBaixaEnum.PC)
+
+        """
+        executa_baixa(nosso_numero, codigo_baixa, self.configs)

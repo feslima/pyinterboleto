@@ -7,9 +7,9 @@ from typing import Any, Dict, Literal, TypedDict, Union
 from requests import post
 
 from ..utils.floats import is_non_zero_positive_float, is_positive_float
-from ..utils.requests import RequestConfigs
-from ..utils.sanitize import (ConvertDateMixin, check_file, check_response,
-                              sanitize_cnpj, sanitize_cpf, strip_chars)
+from ..utils.requests import RequestConfigs, get_api_configs
+from ..utils.sanitize import (ConvertDateMixin, check_response, sanitize_cnpj,
+                              sanitize_cpf, strip_chars)
 from ..utils.url import API_URL
 from .desconto import SEM_DESCONTO_DICT, Desconto
 from .mensagem import MENSAGEM_VAZIA, Mensagem
@@ -205,15 +205,35 @@ class BoletoResponse(TypedDict):
     linhaDigitavel: str
 
 
-def emitir_boleto(dados: Emissao, configs: RequestConfigs):
-    conta_inter = strip_chars(configs['conta_inter'])
+def emitir_boleto(dados: Emissao, configs: RequestConfigs) -> BoletoResponse:
+    """Emite um boleto baseado nos `dados` provisionados.
+
+    O boleto incluído estará disponível para consulta e pagamento, após 
+    um tempo apróximado de 5 minutos da sua inclusão. Esse tempo é 
+    necessário para o registro do boleto na CIP.
+
+    Parameters
+    ----------
+    dados : Emissao
+        Estrutura que representa o detalhamento dos dados necessários para 
+        a emissão de um boleto.
+
+    configs: RequestConfigs
+        Dicionário de configuração com número de conta e certificados de 
+        autenticação.
+
+    Returns
+    -------
+    BoletoResponse
+        Dicionário que descreve o resultado de uma emissão de boleto bem 
+        sucedida.
+    """
+    acc, certificate, key = get_api_configs(configs)
     headers = {
         'content-type': 'application/json',
-        'x-inter-conta-corrente': conta_inter
+        'x-inter-conta-corrente': acc
     }
 
-    certificate = str(check_file(configs['cert']))
-    key = str(check_file(configs['key']))
     response = post(API_URL, data=dados.to_json(),
                     headers=headers,
                     cert=(certificate, key))

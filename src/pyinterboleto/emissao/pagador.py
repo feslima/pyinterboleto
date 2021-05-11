@@ -2,9 +2,9 @@ from dataclasses import dataclass, fields
 from enum import Enum, unique
 from typing import Union
 
-from src.pyinterboleto.utils.sanitize import (sanitize_cep, sanitize_cnpj,
-                                              sanitize_cpf)
 from unidecode import unidecode
+
+from ..utils.sanitize import sanitize_cep, sanitize_cnpj, sanitize_cpf
 
 
 @unique

@@ -3,15 +3,14 @@ from datetime import date
 from enum import Enum, unique
 from typing import List, Optional, TypedDict, Union
 
-from pyinterboleto.utils.requests import RequestConfigs
 from requests import get
 
 from ..baixa import CodigoBaixaEnum
 from ..emissao.desconto import Desconto
 from ..emissao.mora import Mora
 from ..emissao.multa import Multa
-from ..utils.sanitize import (ConvertDateMixin, check_file, check_response,
-                              str_to_date, strip_chars)
+from ..utils.requests import RequestConfigs, get_api_configs
+from ..utils.sanitize import ConvertDateMixin, check_response
 from ..utils.url import API_URL
 
 
@@ -127,19 +126,29 @@ def get_lista_boletos(data_inicial: date, data_final: date,
     Parameters
     ----------
     data_inicial : date
-        Data de início para o filtro.
+        Data de início para o filtro. Esta data corresponde a data de 
+        vencimento dos títulos. Isto é, a filtragem vai incluir títulos com 
+        data de vencimento a partir desta data.
+
     data_final : date
-        Data de fim para o filtro.
+        Data de fim para o filtro. Esta data corresponde a data de vencimento 
+        dos títulos. Isto é, a filtragem vai incluir títulos com data de 
+        vencimento até esta data.
+
     configs : RequestConfigs
         Dicionário de configuração com número de conta e certificados de 
         autenticação.
+
     filtrar : Optional[FiltrarEnum], optional
         Opção para situação atual do boleto, None caso não seja especificado.
+
     ordernar : Optional[OrdenarEnum], optional
         Opção de ordenação do retorno da consulta, None caso não seja 
         especificado.
+
     page : Optional[int], optional
         Número da página, None caso não seja especificado. Valor máximo: 20.
+
     size : Optional[int], optional
         Tamanho da página, None caso não seja especificado.
 
@@ -148,9 +157,9 @@ def get_lista_boletos(data_inicial: date, data_final: date,
     ResponseList
         Resultado da busca.
     """
-    headers = {'x-inter-conta-corrente': strip_chars(configs['conta_inter'])}
-    cert = str(check_file(configs['cert']))
-    key = str(check_file(configs['key']))
+    acc, certificate, key = get_api_configs(configs)
+
+    headers = {'x-inter-conta-corrente': acc}
 
     params = {
         'dataInicial': str(data_inicial),
@@ -170,7 +179,8 @@ def get_lista_boletos(data_inicial: date, data_final: date,
     if page is not None:
         params.update({'page': page})
 
-    response = get(API_URL, params=params, headers=headers, cert=(cert, key))
+    response = get(API_URL, params=params, headers=headers,
+                   cert=(certificate, key))
 
     contents = check_response(response, "Filtragem inválida.")
 
