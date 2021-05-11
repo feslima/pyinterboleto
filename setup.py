@@ -5,9 +5,11 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 GITHUB_URL = "https://github.com/feslima/pyinterboleto"
 
+__version__ = "0.0.2"
+
 setuptools.setup(
     name="pyinterboleto",
-    version="0.0.1",
+    version=__version__,
     author="Felipe Souza Lima",
     author_email="feslima93@gmail.com",
     description=("Biblioteca para facilitar o manuseio de boletos de contas "
@@ -20,7 +22,7 @@ setuptools.setup(
     },
     classifiers=[
         "Programming Language :: Python :: 3",
-        "License :: OSI Approved :: MIT License",
+        "License :: OSI Approved :: GNU Lesser General Public License v3 (LGPLv3)",
         "Operating System :: OS Independent",
     ],
     package_dir={"": "src"},
