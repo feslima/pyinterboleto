@@ -6,13 +6,13 @@ from typing import List, Optional, TypedDict, Union
 from pyinterboleto.utils.requests import RequestConfigs
 from requests import get
 
+from ..baixa import CodigoBaixaEnum
 from ..emissao.desconto import Desconto
 from ..emissao.mora import Mora
 from ..emissao.multa import Multa
-from ..utils.sanitize import (check_file, check_response, str_to_date,
-                              strip_chars)
-
-_API_URL = 'https://apis.bancointer.com.br:8443/openbanking/v1/certificado/boletos'
+from ..utils.sanitize import (ConvertDateMixin, check_file, check_response,
+                              str_to_date, strip_chars)
+from ..utils.url import API_URL
 
 
 @unique
@@ -57,31 +57,8 @@ class OrdenarEnum(Enum):
     SD = 'STATUS_DSC'
 
 
-@unique
-class CodigoBaixaEnum(Enum):
-    """Domínio que descreve o tipo de baixa sendo solicitado.
-
-    - A: Baixa por acertos;
-    - P: Baixado por ter sido protestado;
-    - D: Baixado para devolução;
-    - PAB: Baixado por protesto após baixa;
-    - PDC: Baixado, pago direto ao cliente;
-    - S: Baixado por substituição;
-    - FS: Baixado por falta de solução;
-    - PC: Baixado a pedido do cliente;
-    """
-    A = 'ACERTOS'
-    P = 'PROTESTADO'
-    D = 'DEVOLUCAO'
-    PAB = 'PROTESTOAPOSBAIXA'
-    PDC = 'PAGODIRETOAOCLIENTE'
-    S = 'SUBISTITUICAO'
-    FS = 'FALTADESOLUCAO'
-    PC = 'APEDIDODOCLIENTE'
-
-
 @dataclass
-class BoletoItem:
+class BoletoItem(ConvertDateMixin):
     nossoNumero: str
     seuNumero: str
     cnpjCpfSacado: str
@@ -104,11 +81,6 @@ class BoletoItem:
     multa: Multa
     mora: Mora
     valorAbatimento: float
-
-    def convert_date(self, field: str) -> None:
-        value = getattr(self, field)
-        if isinstance(value, str):
-            setattr(self, field, str_to_date(value))
 
     def __post_init__(self):
         self.convert_date('dataPagtoBaixa')
@@ -198,7 +170,7 @@ def get_lista_boletos(data_inicial: date, data_final: date,
     if page is not None:
         params.update({'page': page})
 
-    response = get(_API_URL, params=params, headers=headers, cert=(cert, key))
+    response = get(API_URL, params=params, headers=headers, cert=(cert, key))
 
     contents = check_response(response, "Filtragem inválida.")
 

@@ -4,6 +4,7 @@ from enum import Enum, unique
 from typing import Union
 
 from ..utils.floats import is_non_zero_positive_float, is_zero_float
+from ..utils.sanitize import ConvertDateMixin
 
 
 @unique
@@ -20,7 +21,7 @@ class CodigoMoraEnum(Enum):
 
 
 @dataclass
-class Mora:
+class Mora(ConvertDateMixin):
     """Representação de um objeto de mora requerido pela API.
 
     Parameters
@@ -74,7 +75,7 @@ class Mora:
             assert is_zero_float(self.valor)
 
         else:
-            assert isinstance(self.data, date)
+            self.convert_date('data')
 
             if self.codigoMora == CodigoMoraEnum.VD:
                 assert is_non_zero_positive_float(self.valor)

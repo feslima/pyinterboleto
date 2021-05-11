@@ -8,8 +8,7 @@ from ..emissao.mora import Mora
 from ..emissao.multa import Multa
 from ..utils.requests import RequestConfigs
 from ..utils.sanitize import check_file, check_response, strip_chars
-
-_API_URL = 'https://apis.bancointer.com.br:8443/openbanking/v1/certificado/boletos'
+from ..utils.url import API_URL
 
 
 class BoletoDetail(TypedDict):
@@ -93,7 +92,7 @@ def get_boleto_detail(nosso_numero: str, configs: RequestConfigs) \
     cert = str(check_file(configs['cert']))
     key = str(check_file(configs['key']))
 
-    URL = _API_URL + f'/{nosso_numero}'
+    URL = API_URL + f'/{nosso_numero}'
     response = get(URL, headers=headers, cert=(cert, key))
 
     contents = check_response(response, "Boleto não encontrado.")

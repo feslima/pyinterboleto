@@ -49,3 +49,12 @@ def check_response(response: Response,
 
 def str_to_date(value: str):
     return date.fromisoformat(value)
+
+
+class ConvertDateMixin:
+    """Habilita conversão de campos do tipo str em tipo date."""
+
+    def convert_date(self, field: str) -> None:
+        value = getattr(self, field)
+        if isinstance(value, str):
+            setattr(self, field, str_to_date(value))

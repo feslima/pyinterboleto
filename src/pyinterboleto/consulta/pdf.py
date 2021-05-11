@@ -2,11 +2,11 @@ from base64 import b64decode
 from io import BytesIO
 from pathlib import Path
 
-from pyinterboleto.utils.requests import PathType, RequestConfigs
-from pyinterboleto.utils.sanitize import check_file, strip_chars
 from requests import get
 
-_API_URL = 'https://apis.bancointer.com.br:8443/openbanking/v1/certificado/boletos'
+from ..utils.requests import PathType, RequestConfigs
+from ..utils.sanitize import check_file, strip_chars
+from ..utils.url import API_URL
 
 
 def get_pdf_boleto_in_memory(nosso_numero: str, configs: RequestConfigs) \
@@ -16,7 +16,7 @@ def get_pdf_boleto_in_memory(nosso_numero: str, configs: RequestConfigs) \
     Returns
     -------
     BytesIO
-        Bytes-like object. Already decoded from base64.
+        Objeto do tipo bytes. Já é decodificado (base64) e pronto pra manuseio.
 
     Raises
     ------
@@ -27,7 +27,7 @@ def get_pdf_boleto_in_memory(nosso_numero: str, configs: RequestConfigs) \
     cert = str(check_file(configs['cert']))
     key = str(check_file(configs['key']))
 
-    URL = _API_URL + f'/{nosso_numero}/pdf'
+    URL = API_URL + f'/{nosso_numero}/pdf'
 
     response = get(URL, headers=headers, cert=(cert, key))
 
@@ -55,11 +55,17 @@ def get_pdf_boleto_to_file(nosso_numero: str, filename: PathType,
     ------
     FileExistsError
         Caminho de arquivo fornecido já existe.
+
+    ValueError
+        Extensão de arquivo fornecida não é do tipo .pdf.
     """
     filename = Path(filename).resolve()
 
     if filename.exists():
         raise FileExistsError("Um arquivo com este nome já existe.")
+
+    if filename.suffix != '.pdf':
+        raise ValueError("Extensão do arquivo deve ser .pdf.")
 
     pdf_bytes = get_pdf_boleto_in_memory(nosso_numero, configs)
 

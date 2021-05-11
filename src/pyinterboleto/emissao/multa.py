@@ -4,6 +4,7 @@ from enum import Enum, unique
 from typing import Union
 
 from ..utils.floats import is_non_zero_positive_float, is_zero_float
+from ..utils.sanitize import ConvertDateMixin
 
 
 @unique
@@ -20,7 +21,7 @@ class CodigoMultaEnum(Enum):
 
 
 @dataclass
-class Multa:
+class Multa(ConvertDateMixin):
     """Representação de um objeto de multa requerido pela API.
 
     Parameters
@@ -74,7 +75,7 @@ class Multa:
             assert is_zero_float(self.valor)
 
         else:
-            assert isinstance(self.data, date)
+            self.convert_date('data')
 
             if self.codigoMulta == CodigoMultaEnum.VF:
                 assert is_non_zero_positive_float(self.valor)
