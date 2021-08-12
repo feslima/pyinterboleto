@@ -15,33 +15,33 @@ jobs:
         python-version: [3.8, 3.9]
     
   steps:
-    - name: Get source code
-      uses: actions/checkout@v2
+  - name: Get source code
+    uses: actions/checkout@v2
 
-    - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v2
-      with:
-        python-version: ${{ matrix.python-version }}
-    
-    - name: Run Poetry image
-      uses: abatilo/actions-poetry@v2.0.0
-      with:
-        poetry-version: 1.1.7
-    
-    - name: Set certificates
-      env:
-        INTER_ACC: ${{ secrets.INTER_ACC }}
-        INTER_API_CERTIFICATE: ${{ secrets.INTER_API_CERTIFICATE }}
-        INTER_API_KEY: ${{ secrets.INTER_API_KEY }}
-      run: |
-        printf "INTER_ACC=%s\nINTER_API_CERTIFICATE=%s\nINTER_API_KEY%s" $INTER_ACC $INTER_API_CERTIFICATE $INTER_API_KEY > $GITHUB_WORKSPACE/tests/inter.env
+  - name: Set up Python ${{ matrix.python-version }}
+    uses: actions/setup-python@v2
+    with:
+      python-version: ${{ matrix.python-version }}
+  
+  - name: Run Poetry image
+    uses: abatilo/actions-poetry@v2.0.0
+    with:
+      poetry-version: 1.1.7
+  
+  - name: Set certificates
+    env:
+      INTER_ACC: ${{ secrets.INTER_ACC }}
+      INTER_API_CERTIFICATE: ${{ secrets.INTER_API_CERTIFICATE }}
+      INTER_API_KEY: ${{ secrets.INTER_API_KEY }}
+    run: |
+      printf "INTER_ACC=%s\nINTER_API_CERTIFICATE=%s\nINTER_API_KEY%s" $INTER_ACC $INTER_API_CERTIFICATE $INTER_API_KEY > $GITHUB_WORKSPACE/tests/inter.env
 
-    - name: Install dependencies
-      run: poetry install
+  - name: Install dependencies
+    run: poetry install
 
-    - name: Run tests
-      run: poetry run pytest
-    
-    - name: Clean up
-      run: rm -rf $GITHUB_WORKSPACE/tests/inter.env
+  - name: Run tests
+    run: poetry run pytest
+  
+  - name: Clean up
+    run: rm -rf $GITHUB_WORKSPACE/tests/inter.env
     
