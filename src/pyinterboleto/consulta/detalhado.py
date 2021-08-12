@@ -1,17 +1,18 @@
-from pathlib import Path
-from typing import TypedDict
+from dataclasses import dataclass
 
+from dacite import from_dict
 from requests import get
 
-from ..emissao.desconto import Desconto
-from ..emissao.mora import Mora
-from ..emissao.multa import Multa
+from ..common.desconto import DescontoConsulta
+from ..common.mora import MoraConsulta
+from ..common.multa import MultaConsulta
 from ..utils.requests import RequestConfigs, get_api_configs
 from ..utils.sanitize import check_response
 from ..utils.url import API_URL
 
 
-class BoletoDetail(TypedDict):
+@dataclass
+class BoletoDetail:
     """Dicionário de respresentação de um boleto detalhado."""
     nomeBeneficiario: str
     cnpjCpfBeneficiario: str
@@ -31,40 +32,12 @@ class BoletoDetail(TypedDict):
     cnpjCpfPagador: str
     dataLimitePagamento: str
     valorAbatimento: float
-    situacaoPagamento: str
-    desconto1: Desconto
-    desconto2: Desconto
-    desconto3: Desconto
-    multa: Multa
-    mora: Mora
-
-
-def _rename_dict_key(d: dict, old_key: str, new_key: str) -> dict:
-    d[new_key] = d[old_key]
-    del d[old_key]
-    return d
-
-
-def convert_contents_into_detail(contents: dict) -> BoletoDetail:
-    d1 = _rename_dict_key(contents.pop('desconto1'),
-                          'codigo', 'codigoDesconto')
-    d2 = _rename_dict_key(contents.pop('desconto2'),
-                          'codigo', 'codigoDesconto')
-    d3 = _rename_dict_key(contents.pop('desconto3'),
-                          'codigo', 'codigoDesconto')
-    desconto1 = Desconto(**d1)
-    desconto2 = Desconto(**d2)
-    desconto3 = Desconto(**d3)
-
-    m = _rename_dict_key(contents.pop('multa'), 'codigo', 'codigoMulta')
-    multa = Multa(**m)
-
-    m = _rename_dict_key(contents.pop('mora'), 'codigo', 'codigoMora')
-    mora = Mora(**m)
-
-    return BoletoDetail(mora=mora, multa=multa,
-                        desconto1=desconto1, desconto2=desconto2,
-                        desconto3=desconto3, **contents)
+    situacao: str
+    desconto1: DescontoConsulta
+    desconto2: DescontoConsulta
+    desconto3: DescontoConsulta
+    multa: MultaConsulta
+    mora: MoraConsulta
 
 
 def get_boleto_detail(nosso_numero: str, configs: RequestConfigs) \
@@ -97,4 +70,4 @@ def get_boleto_detail(nosso_numero: str, configs: RequestConfigs) \
 
     contents = check_response(response, "Boleto não encontrado.")
 
-    return convert_contents_into_detail(contents)
+    return from_dict(BoletoDetail, contents)

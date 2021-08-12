@@ -6,15 +6,15 @@ from typing import Any, Dict, Literal, TypedDict, Union
 
 from requests import post
 
+from ..common.desconto import CodigoDescontoEnum, DescontoEmissao
+from ..common.mora import CodigoMoraEnum, MoraEmissao
+from ..common.multa import CodigoMultaEnum, MultaEmissao
 from ..utils.floats import is_non_zero_positive_float, is_positive_float
 from ..utils.requests import RequestConfigs, get_api_configs
 from ..utils.sanitize import (ConvertDateMixin, check_response, sanitize_cnpj,
                               sanitize_cpf, strip_chars)
 from ..utils.url import API_URL
-from .desconto import SEM_DESCONTO_DICT, Desconto
 from .mensagem import MENSAGEM_VAZIA, Mensagem
-from .mora import SEM_MORA, CodigoMoraEnum, Mora
-from .multa import SEM_MULTA, CodigoMultaEnum, Multa
 from .pagador import Pagador
 
 
@@ -30,6 +30,11 @@ class DefaultEncoder(JSONEncoder):
 
 SerializedDict = Dict[str, Union[str, float]]
 NUM_DIAS_AGENDA = Literal['TRINTA', 'SESSENTA']
+
+
+SEM_DESCONTO_DICT = DescontoEmissao(codigoDesconto=CodigoDescontoEnum.NTD)
+SEM_MORA = MoraEmissao(codigoMora=CodigoMoraEnum.I)
+SEM_MULTA = MultaEmissao(codigoMulta=CodigoMultaEnum.NTM)
 
 
 @dataclass
@@ -77,7 +82,7 @@ class Emissao(ConvertDateMixin):
         será usado um objeto que representa uma mensagem vazia. Isto é, todos 
         os campos serão em branco (string vazio).
 
-    desconto1: Desconto, optional
+    desconto1: DescontoEmissao, optional
         Desconto a ser aplicado ao título. Caso não seja especificado, será 
         definido um objeto de Desconto que há desconto. Isto é:
         {
@@ -87,7 +92,7 @@ class Emissao(ConvertDateMixin):
             'valor': 0.0
         }
 
-    desconto2: Desconto, optional
+    desconto2: DescontoEmissao, optional
         Desconto a ser aplicado ao título. Caso não seja especificado, será 
         definido um objeto de Desconto que há desconto. Isto é:
         {
@@ -97,7 +102,7 @@ class Emissao(ConvertDateMixin):
             'valor': 0.0
         }
 
-    desconto3: Desconto, optional
+    desconto3: DescontoEmissao, optional
         Desconto a ser aplicado ao título. Caso não seja especificado, será 
         definido um objeto de Desconto que há desconto. Isto é:
         {
@@ -136,11 +141,11 @@ class Emissao(ConvertDateMixin):
     dataEmissao: Union[str, date]
     dataVencimento: Union[str, date]
     numDiasAgenda: NUM_DIAS_AGENDA = field(default='TRINTA')
-    desconto1: Desconto = field(default=SEM_DESCONTO_DICT)
-    desconto2: Desconto = field(default=SEM_DESCONTO_DICT)
-    desconto3: Desconto = field(default=SEM_DESCONTO_DICT)
-    multa: Multa = field(default=SEM_MULTA)
-    mora: Mora = field(default=SEM_MORA)
+    desconto1: DescontoEmissao = field(default=SEM_DESCONTO_DICT)
+    desconto2: DescontoEmissao = field(default=SEM_DESCONTO_DICT)
+    desconto3: DescontoEmissao = field(default=SEM_DESCONTO_DICT)
+    multa: MultaEmissao = field(default=SEM_MULTA)
+    mora: MoraEmissao = field(default=SEM_MORA)
 
     # optional fields
     valorAbatimento: float = 0.0
