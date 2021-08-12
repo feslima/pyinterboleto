@@ -16,7 +16,7 @@
 			"**/__pycache__": true
 		},
 		"workbench.tree.indent": 20,
-		"python.pythonPath": "${workspaceFolder}/venv/bin/python",
+		"python.poetryPath": "{env:HOME}/.poetry/bin/poetry",
 		"editor.formatOnSave": true,
 		"autoDocstring.docstringFormat": "numpy",
 		"[python]": {
@@ -27,6 +27,12 @@
 				"source.organizeImports": true
 			}
 		},
-		"python.envFile": "${workspaceFolder}/.vscode/.env"
+		"python.envFile": "${workspaceFolder}/.vscode/.env",
+		"python.testing.pytestEnabled": true,
+		"python.testing.nosetestsEnabled": false,
+		"python.testing.unittestEnabled": false,
+		"python.testing.pytestArgs": [
+			"tests"
+		],
 	}
 }
