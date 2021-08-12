@@ -34,8 +34,7 @@ jobs:
         INTER_API_CERTIFICATE: ${{ secrets.INTER_API_CERTIFICATE }}
         INTER_API_KEY: ${{ secrets.INTER_API_KEY }}
       run: |
-        printf "INTER_ACC=%s\nINTER_API_CERTIFICATE=%s\nINTER_API_KEY%s" $INTER_ACC $INTER_API_CERTIFICATE $INTER_API_KEY > inter.env
-      working-directory: tests
+        printf "INTER_ACC=%s\nINTER_API_CERTIFICATE=%s\nINTER_API_KEY=%s" $INTER_ACC $INTER_API_CERTIFICATE $INTER_API_KEY > inter.env
 
     - name: Install dependencies
       run: poetry install
@@ -45,5 +44,4 @@ jobs:
     
     - name: Clean up
       run: rm -rf inter.env
-      working-directory: tests
     
