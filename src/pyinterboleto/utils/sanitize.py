@@ -1,5 +1,5 @@
 import re
-from datetime import date
+from datetime import date, datetime
 from pathlib import Path
 from typing import Optional
 
@@ -47,8 +47,10 @@ def check_response(response: Response,
     return contents
 
 
-def str_to_date(value: str):
-    return date.fromisoformat(value)
+def str_to_date(value: str) -> date:
+    """Converts a string representation of a date in dd/mm/YYYY format into 
+    date object."""
+    return datetime.strptime(value, "%d/%m/%Y").date()
 
 
 class ConvertDateMixin:
@@ -56,5 +58,5 @@ class ConvertDateMixin:
 
     def convert_date(self, field: str) -> None:
         value = getattr(self, field)
-        if isinstance(value, str):
+        if isinstance(value, str) and value:
             setattr(self, field, str_to_date(value))
