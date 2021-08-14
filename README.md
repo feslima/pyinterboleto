@@ -1,6 +1,8 @@
 # PyInterBoleto
 Biblioteca para facilitar o manuseio de boletos de contas PJ no Banco Inter.
 
+[![PyPI version](https://badge.fury.io/py/pyinterboleto.svg)](https://badge.fury.io/py/pyinterboleto)
+
 ***
 - [PyInterBoleto](#pyinterboleto)
 - [Instalação](#instalação)
