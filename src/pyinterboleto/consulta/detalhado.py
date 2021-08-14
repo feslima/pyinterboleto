@@ -1,4 +1,6 @@
 from dataclasses import dataclass
+from datetime import date, datetime
+from typing import Union
 
 from dacite import from_dict
 from requests import get
@@ -7,30 +9,32 @@ from ..common.desconto import DescontoConsulta
 from ..common.mora import MoraConsulta
 from ..common.multa import MultaConsulta
 from ..utils.requests import RequestConfigs, get_api_configs
-from ..utils.sanitize import check_response
+from ..utils.sanitize import (ConvertDateMixin, ConvertDatetimeMixin,
+                              check_response)
 from ..utils.url import API_URL
 
 
 @dataclass
-class BoletoDetail:
-    """Dicionário de respresentação de um boleto detalhado."""
+class BoletoDetail(ConvertDateMixin, ConvertDatetimeMixin):
+    """Objeto de respresentação de um boleto detalhado."""
     nomeBeneficiario: str
     cnpjCpfBeneficiario: str
     tipoPessoaBeneficiario: str
-    dataHoraSituacao: str
+    dataHoraSituacao: Union[datetime, str]
     codigoBarras: str
     linhaDigitavel: str
-    dataVencimento: str
-    dataEmissao: str
-    descricao: str
+    dataVencimento: Union[date, str]
+    dataEmissao: Union[date, str]
     seuNumero: str
     valorNominal: float
     nomePagador: str
     emailPagador: str
+    dddPagador: str
     telefonePagador: str
     tipoPessoaPagador: str
     cnpjCpfPagador: str
-    dataLimitePagamento: str
+    codigoEspecie: str
+    dataLimitePagamento: Union[date, str]
     valorAbatimento: float
     situacao: str
     desconto1: DescontoConsulta
@@ -38,6 +42,15 @@ class BoletoDetail:
     desconto3: DescontoConsulta
     multa: MultaConsulta
     mora: MoraConsulta
+    situacaoPagamento: str = ''
+    valorTotalRecebimento: float = 0.0
+
+    def __post_init__(self):
+        self.convert_date('dataVencimento')
+        self.convert_date('dataEmissao')
+        self.convert_date('dataLimitePagamento')
+
+        self.convert_datetime('dataHoraSituacao')
 
 
 def get_boleto_detail(nosso_numero: str, configs: RequestConfigs) \
@@ -59,7 +72,7 @@ def get_boleto_detail(nosso_numero: str, configs: RequestConfigs) \
     Returns
     -------
     BoletoDetail
-        Dicionário de representação detalhada de um boleto.
+        Objeto de representação detalhada de um boleto.
     """
     acc, certificate, key = get_api_configs(configs)
 

@@ -53,10 +53,29 @@ def str_to_date(value: str) -> date:
     return datetime.strptime(value, "%d/%m/%Y").date()
 
 
+def str_to_datetime(value: str) -> datetime:
+    """Converts a string representation of a datetime in dd/mm/YYYY HH:MM 
+    format into datetime object."""
+    return datetime.strptime(value, "%d/%m/%Y %H:%M")
+
+
 class ConvertDateMixin:
-    """Habilita conversão de campos do tipo str em tipo date."""
+    """Habilita conversão de campos do tipo str em tipo date.
+
+    Formato do str deve ser dd/mm/AAAA"""
 
     def convert_date(self, field: str) -> None:
         value = getattr(self, field)
         if isinstance(value, str) and value:
             setattr(self, field, str_to_date(value))
+
+
+class ConvertDatetimeMixin:
+    """Habilita conversão de campos do tipo str em tipo datetime.
+
+    Formato do str deve ser dd/mm/AAAA HH:MM"""
+
+    def convert_datetime(self, field: str) -> None:
+        value = getattr(self, field)
+        if isinstance(value, str) and value:
+            setattr(self, field, str_to_datetime(value))
