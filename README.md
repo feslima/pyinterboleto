@@ -43,8 +43,10 @@ Antes de fazer qualquer requisição à API do Inter é preciso antes definir o 
 ```python
 >>> from pathlib import Path
 >>> from datetime import date, timedelta
->>> from pprint import pprint
+>>> from prettyprinter import pprint, install_extras
 >>> from pyinterboleto import RequestConfigs
+>>> 
+>>> install_extras()
 >>> 
 >>> # definição da configuração de autenticação
 >>> direc = Path('caminho/para/pasta/com/certificados')
@@ -58,7 +60,7 @@ Antes de fazer qualquer requisição à API do Inter é preciso antes definir o 
 _*Os dados a seguir são fictícios. Não os utilize do jeito que estão!*_
 
 ```python
->>> from pyinterboleto import Boleto, Emissao, Pagador, RequestConfigs
+>>> from pyinterboleto import Boleto, Emissao, Pagador
 >>> boleto = Boleto(configs) # configs vem da seção configuração
 >>>
 >>> pagador = Pagador(
@@ -100,32 +102,46 @@ ou quando se faz a filtragem de coleções de boletos.
 >>> boleto = Boleto(configs)
 >>> num_boleto = '00123456789' # numero de identificação do título pelo Inter
 >>> detail = boleto.consulta_detalhada(num_boleto)
->>> print(detail)
-{'cnpjCpfBeneficiario': '00000000000000',
-'cnpjCpfPagador': '12345678909',
-'codigoBarras': '00000000000000000000000000000000000000000000',
-'codigoEspecie': 'OUTROS',
-'dataEmissao': '01/05/2021',
-'dataHoraSituacao': '01/05/2021 15:22',
-'dataLimitePagamento': '11/06/2021',
-'dataVencimento': '12/05/2021',
-'dddPagador': '',
-'desconto1': Desconto(codigoDesconto=<CodigoDescontoEnum.NTD: 'NAOTEMDESCONTO'>, taxa=0.0, valor=0.0, data=''),
-'desconto2': Desconto(codigoDesconto=<CodigoDescontoEnum.NTD: 'NAOTEMDESCONTO'>, taxa=0.0, valor=0.0, data=''),
-'desconto3': Desconto(codigoDesconto=<CodigoDescontoEnum.NTD: 'NAOTEMDESCONTO'>, taxa=0.0, valor=0.0, data=''),
-'emailPagador': '',
-'linhaDigitavel': '00000000000000000000000000000000000000000000000',
-'mora': Mora(codigoMora=<CodigoMoraEnum.I: 'ISENTO'>, taxa=0.0, valor=0.0, data=''),
-'multa': Multa(codigoMulta=<CodigoMultaEnum.NTM: 'NAOTEMMULTA'>, taxa=0.0, valor=0.0, data=''),
-'nomeBeneficiario': 'NOME DO BENEFICIARIO CONTA PJ',
-'nomePagador': 'Pessoa Ficticia da Silva',
-'seuNumero': '00001',
-'situacao': 'EMABERTO',
-'telefonePagador': '',
-'tipoPessoaBeneficiario': 'JURIDICA',
-'tipoPessoaPagador': 'FISICA',
-'valorAbatimento': 0.0,
-'valorNominal': 0.01}
+>>> pprint(detail)
+pyinterboleto.consulta.detalhado.BoletoDetail(
+    nomeBeneficiario='NOME DO BENEFICIARIO CONTA PJ',
+    cnpjCpfBeneficiario='00000000000000',
+    tipoPessoaBeneficiario='JURIDICA',
+    dataHoraSituacao=datetime.datetime(2021, 5, 10),
+    codigoBarras='00000000000000000000000000000000000000000000',
+    linhaDigitavel='00000000000000000000000000000000000000000000000',
+    dataVencimento=datetime.date(2021, 5, 11),
+    dataEmissao=datetime.date(2021, 5, 9),
+    seuNumero='00001',
+    valorNominal=0.01,
+    nomePagador='Pessoa Ficticia da Silva',
+    emailPagador='',
+    dddPagador='',
+    telefonePagador='',
+    tipoPessoaPagador='FISICA',
+    cnpjCpfPagador='12345678909',
+    codigoEspecie='OUTROS',
+    dataLimitePagamento=datetime.date(2021, 6, 10),
+    valorAbatimento=0.0,
+    situacao='PAGO',
+    desconto1=pyinterboleto.common.desconto.DescontoConsulta(
+        codigo=pyinterboleto.common.desconto.CodigoDescontoEnum.NTD
+    ),
+    desconto2=pyinterboleto.common.desconto.DescontoConsulta(
+        codigo=pyinterboleto.common.desconto.CodigoDescontoEnum.NTD
+    ),
+    desconto3=pyinterboleto.common.desconto.DescontoConsulta(
+        codigo=pyinterboleto.common.desconto.CodigoDescontoEnum.NTD
+    ),
+    multa=pyinterboleto.common.multa.MultaConsulta(
+        codigo=pyinterboleto.common.multa.CodigoMultaEnum.NTM
+    ),
+    mora=pyinterboleto.common.mora.MoraConsulta(
+        codigo=pyinterboleto.common.mora.CodigoMoraEnum.I
+    ),
+    situacaoPagamento='BAIXADO',
+    valorTotalRecebimento=0.01
+)
 >>>
 ```
 
