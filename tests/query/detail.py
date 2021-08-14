@@ -1,6 +1,9 @@
 import pytest
+from prettyprinter import install_extras, pprint
 from pyinterboleto import Boleto, RequestConfigs
 from pyinterboleto.consulta.detalhado import BoletoDetail
+
+install_extras()
 
 ids = ('00677835839', '00678218266', '00678651490', '00678665391',
        '00684059480', '00699251197', '00710491624', '00710541303')

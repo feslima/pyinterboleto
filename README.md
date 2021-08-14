@@ -154,43 +154,279 @@ As datas de início e final da filtragem são obrigatórias, [há outras defini�
 >>> inicial = date.today() - timedelta(days=30)
 >>> final = date.today()
 >>> lista = boleto.consulta_lista(inicial, final)
->>> print(lista)
-{'content': [{'cnpjCpfSacado': '12345678909',
-    'dataEmissao': '09/01/2021',
-    'dataLimite': '10/02/2021',
-    'dataVencimento': '21/01/2021',
-    'desconto1': {'codigo': 'NAOTEMDESCONTO',
-                'taxa': 0.0,
-                'valor': 0.0},
-    'desconto2': {'codigo': 'NAOTEMDESCONTO',
-                'taxa': 0.0,
-                'valor': 0.0},
-    'desconto3': {'codigo': 'NAOTEMDESCONTO',
-                'taxa': 0.0,
-                'valor': 0.0},
-    'email': '',
-    'linhaDigitavel': '00000000000000000000000000000000000000000000000',
-    'mora': {'codigo': 'ISENTO', 'taxa': 0.0, 'valor': 0.0},
-    'multa': {'codigo': 'NAOTEMMULTA', 'taxa': 0.0, 'valor': 0.0},
-    'nomeSacado': 'Pessoa Ficticia da Silva',
-    'nossoNumero': '00000000000',
-    'seuNumero': '00001',
-    'situacao': 'EMABERTO',
-    'telefone': '',
-    'valorAbatimento': 0.0,
-    'valorJuros': 0.0,
-    'valorMulta': 0.0,
-    'valorNominal': 0.01}],
-    'first': True,
-    'last': True,
-    'numberOfElements': 1,
-    'size': 20,
-    'summary': {'baixados': {'quantidade': 0, 'valor': 0},
-                'expirados': {'quantidade': 0, 'valor': 0},
-                'previstos': {'quantidade': 1, 'valor': 0.01},
-                'recebidos': {'quantidade': 0, 'valor': 0}},
-    'totalElements': 1,
-    'totalPages': 1}
+>>> pprint(lista)
+pyinterboleto.consulta.lista.ResponseList(
+    totalPages=1,
+    totalElements=8,
+    numberOfElements=8,
+    last=True,
+    first=True,
+    size=20,
+    summary=pyinterboleto.consulta.lista.Summary(
+        recebidos=pyinterboleto.consulta.lista.SummaryContent(
+            quantidade=1,
+            valor=0.01
+        ),
+        previstos=pyinterboleto.consulta.lista.SummaryContent(
+            quantidade=2,
+            valor=66.2
+        ),
+        baixados=pyinterboleto.consulta.lista.SummaryContent(
+            quantidade=2,
+            valor=0.02
+        ),
+        expirados=pyinterboleto.consulta.lista.SummaryContent(
+            quantidade=3,
+            valor=38.01
+        )
+    ),
+    content=[
+        pyinterboleto.consulta.lista.BoletoItem(
+            nossoNumero='00000000000',
+            seuNumero='00001',
+            cnpjCpfSacado='1234567809',
+            nomeSacado='Pessoa Ficticia da Silva',
+            situacao='PAGO',
+            dataVencimento=datetime.date(2021, 5, 11),
+            valorNominal=0.01,
+            email='',
+            telefone='',
+            dataEmissao=datetime.date(2021, 5, 9),
+            dataLimite=datetime.date(2021, 6, 10),
+            linhaDigitavel='00000000000000000000000000000000000000000000000',
+            desconto1=pyinterboleto.common.desconto.DescontoConsulta(
+                codigo=pyinterboleto.common.desconto.CodigoDescontoEnum.NTD
+            ),
+            desconto2=pyinterboleto.common.desconto.DescontoConsulta(
+                codigo=pyinterboleto.common.desconto.CodigoDescontoEnum.NTD
+            ),
+            desconto3=pyinterboleto.common.desconto.DescontoConsulta(
+                codigo=pyinterboleto.common.desconto.CodigoDescontoEnum.NTD
+            ),
+            multa=pyinterboleto.common.multa.MultaConsulta(
+                codigo=pyinterboleto.common.multa.CodigoMultaEnum.NTM
+            ),
+            mora=pyinterboleto.common.mora.MoraConsulta(
+                codigo=pyinterboleto.common.mora.CodigoMoraEnum.I
+            ),
+            valorAbatimento=0.0,
+            dataPagtoBaixa=datetime.date(2021, 5, 10),
+            valorTotalRecebimento=0.01
+        ),
+        pyinterboleto.consulta.lista.BoletoItem(
+            nossoNumero='00000000000',
+            seuNumero='00002',
+            cnpjCpfSacado='1234567809',
+            nomeSacado='Pessoa Ficticia da Silva',
+            situacao='EXPIRADO',
+            dataVencimento=datetime.date(2021, 5, 12),
+            valorNominal=0.01,
+            email='',
+            telefone='',
+            dataEmissao=datetime.date(2021, 5, 10),
+            dataLimite=datetime.date(2021, 6, 11),
+            linhaDigitavel='00000000000000000000000000000000000000000000000',
+            desconto1=pyinterboleto.common.desconto.DescontoConsulta(
+                codigo=pyinterboleto.common.desconto.CodigoDescontoEnum.NTD
+            ),
+            desconto2=pyinterboleto.common.desconto.DescontoConsulta(
+                codigo=pyinterboleto.common.desconto.CodigoDescontoEnum.NTD
+            ),
+            desconto3=pyinterboleto.common.desconto.DescontoConsulta(
+                codigo=pyinterboleto.common.desconto.CodigoDescontoEnum.NTD
+            ),
+            multa=pyinterboleto.common.multa.MultaConsulta(
+                codigo=pyinterboleto.common.multa.CodigoMultaEnum.NTM
+            ),
+            mora=pyinterboleto.common.mora.MoraConsulta(
+                codigo=pyinterboleto.common.mora.CodigoMoraEnum.I
+            ),
+            valorAbatimento=0.0
+        ),
+        pyinterboleto.consulta.lista.BoletoItem(
+            nossoNumero='00000000000',
+            seuNumero='00003',
+            cnpjCpfSacado='1234567809',
+            nomeSacado='Pessoa Ficticia da Silva',
+            situacao='BAIXADO',
+            dataVencimento=datetime.date(2021, 5, 13),
+            valorNominal=0.01,
+            email='',
+            telefone='',
+            dataEmissao=datetime.date(2021, 5, 11),
+            dataLimite=datetime.date(2021, 6, 12),
+            linhaDigitavel='00000000000000000000000000000000000000000000000',
+            desconto1=pyinterboleto.common.desconto.DescontoConsulta(
+                codigo=pyinterboleto.common.desconto.CodigoDescontoEnum.NTD
+            ),
+            desconto2=pyinterboleto.common.desconto.DescontoConsulta(
+                codigo=pyinterboleto.common.desconto.CodigoDescontoEnum.NTD
+            ),
+            desconto3=pyinterboleto.common.desconto.DescontoConsulta(
+                codigo=pyinterboleto.common.desconto.CodigoDescontoEnum.NTD
+            ),
+            multa=pyinterboleto.common.multa.MultaConsulta(
+                codigo=pyinterboleto.common.multa.CodigoMultaEnum.NTM
+            ),
+            mora=pyinterboleto.common.mora.MoraConsulta(
+                codigo=pyinterboleto.common.mora.CodigoMoraEnum.I
+            ),
+            valorAbatimento=0.0,
+            dataPagtoBaixa=datetime.date(2021, 5, 11)
+        ),
+        pyinterboleto.consulta.lista.BoletoItem(
+            nossoNumero='00000000000',
+            seuNumero='00003',
+            cnpjCpfSacado='1234567809',
+            nomeSacado='Pessoa Ficticia da Silva',
+            situacao='BAIXADO',
+            dataVencimento=datetime.date(2021, 5, 13),
+            valorNominal=0.01,
+            email='',
+            telefone='',
+            dataEmissao=datetime.date(2021, 5, 11),
+            dataLimite=datetime.date(2021, 6, 12),
+            linhaDigitavel='00000000000000000000000000000000000000000000000',
+            desconto1=pyinterboleto.common.desconto.DescontoConsulta(
+                codigo=pyinterboleto.common.desconto.CodigoDescontoEnum.NTD
+            ),
+            desconto2=pyinterboleto.common.desconto.DescontoConsulta(
+                codigo=pyinterboleto.common.desconto.CodigoDescontoEnum.NTD
+            ),
+            desconto3=pyinterboleto.common.desconto.DescontoConsulta(
+                codigo=pyinterboleto.common.desconto.CodigoDescontoEnum.NTD
+            ),
+            multa=pyinterboleto.common.multa.MultaConsulta(
+                codigo=pyinterboleto.common.multa.CodigoMultaEnum.NTM
+            ),
+            mora=pyinterboleto.common.mora.MoraConsulta(
+                codigo=pyinterboleto.common.mora.CodigoMoraEnum.I
+            ),
+            valorAbatimento=0.0,
+            dataPagtoBaixa=datetime.date(2021, 5, 11)
+        ),
+        pyinterboleto.consulta.lista.BoletoItem(
+            nossoNumero='00000000000',
+            seuNumero='00004',
+            cnpjCpfSacado='1234567809',
+            nomeSacado='Pessoa Ficticia da Silva',
+            situacao='EXPIRADO',
+            dataVencimento=datetime.date(2021, 6, 1),
+            valorNominal=20.0,
+            email='',
+            telefone='',
+            dataEmissao=datetime.date(2021, 5, 30),
+            dataLimite=datetime.date(2021, 7, 1),
+            linhaDigitavel='00000000000000000000000000000000000000000000000',
+            desconto1=pyinterboleto.common.desconto.DescontoConsulta(
+                codigo=pyinterboleto.common.desconto.CodigoDescontoEnum.NTD
+            ),
+            desconto2=pyinterboleto.common.desconto.DescontoConsulta(
+                codigo=pyinterboleto.common.desconto.CodigoDescontoEnum.NTD
+            ),
+            desconto3=pyinterboleto.common.desconto.DescontoConsulta(
+                codigo=pyinterboleto.common.desconto.CodigoDescontoEnum.NTD
+            ),
+            multa=pyinterboleto.common.multa.MultaConsulta(
+                codigo=pyinterboleto.common.multa.CodigoMultaEnum.NTM
+            ),
+            mora=pyinterboleto.common.mora.MoraConsulta(
+                codigo=pyinterboleto.common.mora.CodigoMoraEnum.I
+            ),
+            valorAbatimento=0.0
+        ),
+        pyinterboleto.consulta.lista.BoletoItem(
+            nossoNumero='00000000000',
+            seuNumero='00005',
+            cnpjCpfSacado='1234567809',
+            nomeSacado='Pessoa Ficticia da Silva',
+            situacao='EXPIRADO',
+            dataVencimento=datetime.date(2021, 7, 9),
+            valorNominal=18.0,
+            email='',
+            telefone='',
+            dataEmissao=datetime.date(2021, 7, 7),
+            dataLimite=datetime.date(2021, 8, 8),
+            linhaDigitavel='00000000000000000000000000000000000000000000000',
+            desconto1=pyinterboleto.common.desconto.DescontoConsulta(
+                codigo=pyinterboleto.common.desconto.CodigoDescontoEnum.NTD
+            ),
+            desconto2=pyinterboleto.common.desconto.DescontoConsulta(
+                codigo=pyinterboleto.common.desconto.CodigoDescontoEnum.NTD
+            ),
+            desconto3=pyinterboleto.common.desconto.DescontoConsulta(
+                codigo=pyinterboleto.common.desconto.CodigoDescontoEnum.NTD
+            ),
+            multa=pyinterboleto.common.multa.MultaConsulta(
+                codigo=pyinterboleto.common.multa.CodigoMultaEnum.NTM
+            ),
+            mora=pyinterboleto.common.mora.MoraConsulta(
+                codigo=pyinterboleto.common.mora.CodigoMoraEnum.I
+            ),
+            valorAbatimento=0.0
+        ),
+        pyinterboleto.consulta.lista.BoletoItem(
+            nossoNumero='00000000000',
+            seuNumero='00006',
+            cnpjCpfSacado='1234567809',
+            nomeSacado='Pessoa Ficticia da Silva',
+            situacao='VENCIDO',
+            dataVencimento=datetime.date(2021, 8, 10),
+            valorNominal=43.0,
+            email='',
+            telefone='',
+            dataEmissao=datetime.date(2021, 8, 7),
+            dataLimite=datetime.date(2021, 9, 9),
+            linhaDigitavel='00000000000000000000000000000000000000000000000',
+            desconto1=pyinterboleto.common.desconto.DescontoConsulta(
+                codigo=pyinterboleto.common.desconto.CodigoDescontoEnum.NTD
+            ),
+            desconto2=pyinterboleto.common.desconto.DescontoConsulta(
+                codigo=pyinterboleto.common.desconto.CodigoDescontoEnum.NTD
+            ),
+            desconto3=pyinterboleto.common.desconto.DescontoConsulta(
+                codigo=pyinterboleto.common.desconto.CodigoDescontoEnum.NTD
+            ),
+            multa=pyinterboleto.common.multa.MultaConsulta(
+                codigo=pyinterboleto.common.multa.CodigoMultaEnum.NTM
+            ),
+            mora=pyinterboleto.common.mora.MoraConsulta(
+                codigo=pyinterboleto.common.mora.CodigoMoraEnum.I
+            ),
+            valorAbatimento=0.0
+        ),
+        pyinterboleto.consulta.lista.BoletoItem(
+            nossoNumero='00000000000',
+            seuNumero='00007',
+            cnpjCpfSacado='1234567809',
+            nomeSacado='Pessoa Ficticia da Silva',
+            situacao='VENCIDO',
+            dataVencimento=datetime.date(2021, 8, 10),
+            valorNominal=23.2,
+            email='',
+            telefone='',
+            dataEmissao=datetime.date(2021, 8, 7),
+            dataLimite=datetime.date(2021, 9, 9),
+            linhaDigitavel='00000000000000000000000000000000000000000000000',
+            desconto1=pyinterboleto.common.desconto.DescontoConsulta(
+                codigo=pyinterboleto.common.desconto.CodigoDescontoEnum.NTD
+            ),
+            desconto2=pyinterboleto.common.desconto.DescontoConsulta(
+                codigo=pyinterboleto.common.desconto.CodigoDescontoEnum.NTD
+            ),
+            desconto3=pyinterboleto.common.desconto.DescontoConsulta(
+                codigo=pyinterboleto.common.desconto.CodigoDescontoEnum.NTD
+            ),
+            multa=pyinterboleto.common.multa.MultaConsulta(
+                codigo=pyinterboleto.common.multa.CodigoMultaEnum.NTM
+            ),
+            mora=pyinterboleto.common.mora.MoraConsulta(
+                codigo=pyinterboleto.common.mora.CodigoMoraEnum.I
+            ),
+            valorAbatimento=0.0
+        )
+    ]
+)
 >>>
 ```
 

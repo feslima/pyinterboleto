@@ -1,8 +1,11 @@
 from datetime import date
 
 import pytest
+from prettyprinter import install_extras, pprint
 from pyinterboleto import Boleto, RequestConfigs
 from pyinterboleto.consulta.lista import FiltrarEnum, OrdenarEnum
+
+install_extras()
 
 
 def ordering_naming(value) -> str:
