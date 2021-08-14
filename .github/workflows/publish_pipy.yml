@@ -1,0 +1,21 @@
+# This is a basic workflow to help you get started with Actions
+
+name: Publish package on PiPy using Poetry
+
+on:
+  push:
+    tags: 
+      - "v*.*.*"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Get source code
+        uses: actions/checkout@v2
+      
+      - name: Build and publish to pypi
+        uses: JRubics/poetry-publish@v1.8
+        with:
+          pypi_token: ${{ secrets.PYPI_API_TOKEN }}
