@@ -1,16 +1,12 @@
 [tool.poetry]
 name = "pyinterboleto"
-version = "0.2.0"
+version = "0.3.0"
 description = "Biblioteca para facilitar o manuseio de boletos de contas PJ no Banco Inter."
 authors = ["Felipe Souza Lima <feslima93@gmail.com>"]
 license = "LGPL-3.0"
 readme = "README.md"
 repository = "https://github.com/feslima/pyinterboleto"
-classifiers = [
-    "Programming Language :: Python :: 3",
-    "License :: OSI Approved :: GNU Lesser General Public License v3 (LGPLv3)",
-    "Operating System :: OS Independent",
-]
+classifiers = ["Operating System :: OS Independent"]
 packages = [{ include = "pyinterboleto", from = "src" }]
 
 [tool.poetry.dependencies]
