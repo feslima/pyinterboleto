@@ -1,14 +1,15 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, fields
 from datetime import date
 from enum import Enum, unique
-from typing import List, Optional, TypedDict, Union
+from typing import List, Optional, Union
 
+from dacite import from_dict
 from requests import get
+from tabulate import tabulate
 
-from ..baixa import CodigoBaixaEnum
-from ..emissao.desconto import Desconto
-from ..emissao.mora import Mora
-from ..emissao.multa import Multa
+from ..common.desconto import DescontoConsulta
+from ..common.mora import MoraConsulta
+from ..common.multa import MultaConsulta
 from ..utils.requests import RequestConfigs, get_api_configs
 from ..utils.sanitize import ConvertDateMixin, check_response
 from ..utils.url import API_URL
@@ -45,14 +46,15 @@ class OrdenarEnum(Enum):
     - SA: Status do título crescente;
     - SD: Status do título decrescente;
     """
-    NN = 'NOSSONUMERO'
+    NNA = 'NOSSONUMERO'
+    NND = 'NOSSONUMERO_DSC'
     SN = 'SEUNUMERO'
-    DVA = 'DATAVENCIMENTO_ASC'
+    DVA = 'DATAVENCIMENTO'
     DVD = 'DATAVENCIMENTO_DSC'
     NS = 'NOMESACADO'
-    VA = 'VALOR_ASC'
+    VA = 'VALOR'
     VD = 'VALOR_DSC'
-    SA = 'STATUS_ASC'
+    SA = 'STATUS'
     SD = 'STATUS_DSC'
 
 
@@ -62,24 +64,22 @@ class BoletoItem(ConvertDateMixin):
     seuNumero: str
     cnpjCpfSacado: str
     nomeSacado: str
-    codigoBaixa: Union[str, CodigoBaixaEnum]
     situacao: str
-    dataPagtoBaixa: Union[str, date]
     dataVencimento: Union[str, date]
     valorNominal: float
-    valorTotalRecebimento: float
     email: str
-    ddd: str
     telefone: str
     dataEmissao: Union[str, date]
     dataLimite: Union[str, date]
     linhaDigitavel: str
-    desconto1: Desconto
-    desconto2: Desconto
-    desconto3: Desconto
-    multa: Multa
-    mora: Mora
+    desconto1: DescontoConsulta
+    desconto2: DescontoConsulta
+    desconto3: DescontoConsulta
+    multa: MultaConsulta
+    mora: MoraConsulta
     valorAbatimento: float
+    dataPagtoBaixa: Union[str, date] = ''
+    valorTotalRecebimento: float = 0.0
 
     def __post_init__(self):
         self.convert_date('dataPagtoBaixa')
@@ -88,19 +88,22 @@ class BoletoItem(ConvertDateMixin):
         self.convert_date('dataLimite')
 
 
-class SummaryContent(TypedDict):
+@dataclass
+class SummaryContent:
     quantidade: int
     valor: float
 
 
-class Summary(TypedDict):
+@dataclass
+class Summary:
     recebidos: SummaryContent
     previstos: SummaryContent
     baixados: SummaryContent
     expirados: SummaryContent
 
 
-class ResponseList(TypedDict):
+@dataclass
+class ResponseList:
     totalPages: int
     totalElements: int
     numberOfElements: int
@@ -110,11 +113,26 @@ class ResponseList(TypedDict):
     summary: Summary
     content: List[BoletoItem]
 
+    def __str__(self) -> str:
+        """Tabulando o conteúdo como representação de objeto."""
+        field_list = ['nossoNumero',
+                      'seuNumero',
+                      'cnpjCpfSacado',
+                      'nomeSacado',
+                      'situacao',
+                      'dataVencimento',
+                      'valorNominal',
+                      'dataEmissao',
+                      'dataLimite']
+        rows = [tuple(getattr(item, field) for field in field_list)
+                for item in self.content]
+        return tabulate(rows, headers=field_list)
+
 
 def get_lista_boletos(data_inicial: date, data_final: date,
                       configs: RequestConfigs,
                       filtrar: Optional[FiltrarEnum] = None,
-                      ordernar: Optional[OrdenarEnum] = None,
+                      ordenar: Optional[OrdenarEnum] = None,
                       page: Optional[int] = None, size: Optional[int] = None
                       ) -> ResponseList:
     """Recupera uma coleção de boletos por um período específico, de acordo 
@@ -142,7 +160,7 @@ def get_lista_boletos(data_inicial: date, data_final: date,
     filtrar : Optional[FiltrarEnum], optional
         Opção para situação atual do boleto, None caso não seja especificado.
 
-    ordernar : Optional[OrdenarEnum], optional
+    ordenar : Optional[OrdenarEnum], optional
         Opção de ordenação do retorno da consulta, None caso não seja 
         especificado.
 
@@ -169,12 +187,12 @@ def get_lista_boletos(data_inicial: date, data_final: date,
     if filtrar is not None:
         params.update({'filtrarPor': filtrar.value})
 
-    if ordernar is not None:
-        params.update({'ordernarPor': ordernar.value})
+    if ordenar is not None:
+        params.update({'ordenarPor': ordenar.value})
 
     if size is not None:
         size = 20 if size > 20 else size
-        params.update({'size': size})
+        params.update({'size': str(size)})
 
     if page is not None:
         params.update({'page': page})
@@ -184,4 +202,4 @@ def get_lista_boletos(data_inicial: date, data_final: date,
 
     contents = check_response(response, "Filtragem inválida.")
 
-    return ResponseList(**contents)
+    return from_dict(ResponseList, contents)

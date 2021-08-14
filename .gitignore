@@ -1,3 +1,7 @@
+# Certificates
+*.crt
+*.key
+
 # General test data
 test_resources/
 
@@ -108,7 +112,7 @@ celerybeat.pid
 *.sage.py
 
 # Environments
-.env
+*.env
 .venv
 env/
 venv/

@@ -261,7 +261,7 @@ class Boleto:
 
     def consulta_lista(self, data_inicial: date, data_final: date,
                        filtrar: Optional[FiltrarEnum] = None,
-                       ordernar: Optional[OrdenarEnum] = None,
+                       ordenar: Optional[OrdenarEnum] = None,
                        page: Optional[int] = None,
                        size: Optional[int] = None) -> ResponseList:
         """Recupera uma coleção de boletos por um período específico, de acordo 
@@ -286,7 +286,7 @@ class Boleto:
             Opção para situação atual do boleto, None caso não seja 
             especificado.
 
-        ordernar : Optional[OrdenarEnum], optional
+        ordenar : Optional[OrdenarEnum], optional
             Opção de ordenação do retorno da consulta, None caso não seja 
             especificado.
 
@@ -356,7 +356,7 @@ class Boleto:
 
         """
         lista = get_lista_boletos(data_inicial, data_final, self.configs,
-                                  filtrar=filtrar, ordernar=ordernar,
+                                  filtrar=filtrar, ordenar=ordenar,
                                   page=page, size=size)
         return lista
 
