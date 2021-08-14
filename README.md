@@ -211,6 +211,32 @@ Também é preciso saber o número de identificação do título. Os tipos de ba
 
 # Testagem
 
-Como a API do Inter não possui ambiente de sandboxing, optei por não implementar rotinas de testes. Isto é, o Inter fornece uma cota sem custo adicional de 100 boletos emitidos por mês. Acima disto, é preciso pagar mais.
+Como a API do Inter não possui ambiente de sandboxing, optei por não implementar rotinas de testes para todas operações, apenas as de consulta. Isto é, o Inter fornece uma cota sem custo adicional de 100 boletos emitidos por mês. Acima disto, é preciso pagar mais.
 
-Como é um recurso bem limitado, não faz sentido implementar uma suíte de testes para emissão e baixa de boletos. No caso de consultas, é possível sim. So não implementei por pura falta de tempo (~~e preguiça também~~).
+Como é um recurso bem limitado, não faz sentido implementar uma suíte de testes para emissão e baixa de boletos. 
+
+Para realizar os testes localmente, clone o repositório e crie um arquivo chamado `inter.env` na raiz do projeto que tem o seguinte formato:
+
+```
+INTER_ACC=''
+INTER_API_KEY='-----BEGIN PRIVATE KEY-----
+...
+-----END PRIVATE KEY-----
+'
+INTER_API_CERTIFICATE='-----BEGIN CERTIFICATE-----
+...
+-----END CERTIFICATE-----'
+```
+
+As variáveis `INTER_ACC`, `INTER_API_KEY` e `INTER_API_CERTIFICATE` são o número da conta Inter (apenas números), contéudos do arquivo `.key` e `.crt` respectivamente.
+
+Instale as dependências de desenvolvimento:
+```shell
+# pode usar o gerenciador que quiser (e.g. poetry, conda, etc.)
+pip install -r requirements-dev.txt
+```
+
+Para rodar os tests:
+```shell
+pytest
+```
