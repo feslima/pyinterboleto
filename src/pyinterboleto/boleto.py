@@ -4,8 +4,7 @@ from typing import Optional, Union, overload
 
 from .baixa import CodigoBaixaEnum, executa_baixa
 from .consulta.detalhado import BoletoDetail, get_boleto_detail
-from .consulta.lista import (FiltrarEnum, OrdenarEnum, ResponseList,
-                             get_lista_boletos)
+from .consulta.lista import FiltrarEnum, OrdenarEnum, ResponseList, get_lista_boletos
 from .consulta.pdf import get_pdf_boleto_in_memory, get_pdf_boleto_to_file
 from .emissao.emissor import BoletoResponse, Emissao, emitir_boleto
 from .utils.requests import PathType, RequestConfigs
@@ -17,19 +16,19 @@ class Boleto:
     Parameters
     ----------
     configs: RequestConfigs
-        Dicionário de configuração com número de conta e certificados de 
+        Dicionário de configuração com número de conta e certificados de
         autenticação.
 
     Notes
     -----
     No caso de emissões, o método `emitir` só pode ser chamado caso a instância
-    desta classe não tenha feito qualquer consulta detalhada (i.e. que tenha 
-    chamado os métodos `consulta_detalhada` ou `consulta_pdf`) ou emissão 
-    prévia. Isto é para evitar emissões com numerações repetidas e demais 
+    desta classe não tenha feito qualquer consulta detalhada (i.e. que tenha
+    chamado os métodos `consulta_detalhada` ou `consulta_pdf`) ou emissão
+    prévia. Isto é para evitar emissões com numerações repetidas e demais
     conflitos.
 
-    Ou seja, múltiplas consultas detalhadas com a mesma instância são 
-    permitidas, e emissão só é permitida uma vez por instância e que não tenha 
+    Ou seja, múltiplas consultas detalhadas com a mesma instância são
+    permitidas, e emissão só é permitida uma vez por instância e que não tenha
     havido consultas detalhadas prévias.
 
     """
@@ -37,14 +36,16 @@ class Boleto:
     def __init__(self, configs: RequestConfigs) -> None:
         self._configs = configs
         self._emitido: bool = False
-        self._numero: str = ''
+        self._numero: str = ""
 
     def __str__(self) -> str:
-        numero = self.numero if self.numero != '' else 'não tem'
-        foi_emitido = 'sim' if self.emitido else 'não'
-        emissivel = 'sim' if self.pode_emitir else 'não'
-        string = (f"Número: {numero}\nFoi emitido: {foi_emitido}\n"
-                  f"É emissivel: {emissivel}")
+        numero = self.numero if self.numero != "" else "não tem"
+        foi_emitido = "sim" if self.emitido else "não"
+        emissivel = "sim" if self.pode_emitir else "não"
+        string = (
+            f"Número: {numero}\nFoi emitido: {foi_emitido}\n"
+            f"É emissivel: {emissivel}"
+        )
 
         return string
 
@@ -58,14 +59,14 @@ class Boleto:
 
     @property
     def pode_emitir(self) -> bool:
-        return self._numero == '' and not self.emitido
+        return self._numero == "" and not self.emitido
 
     @property
     def numero(self) -> str:
         """Número de identificação do boleto na API.
 
         Se o boleto ainda não foi emitido, ou houve alguma consulta detalhada
-        (`consulta_detalhada` ou `consulta_pdf`), essa propriedade é um string 
+        (`consulta_detalhada` ou `consulta_pdf`), essa propriedade é um string
         vazio.
         """
         return self._numero
@@ -73,26 +74,26 @@ class Boleto:
     def emitir(self, dados: Emissao) -> BoletoResponse:
         """Emite um boleto baseado nos `dados` provisionados.
 
-        O boleto incluído estará disponível para consulta e pagamento, após 
-        um tempo apróximado de 5 minutos da sua inclusão. Esse tempo é 
+        O boleto incluído estará disponível para consulta e pagamento, após
+        um tempo apróximado de 5 minutos da sua inclusão. Esse tempo é
         necessário para o registro do boleto na CIP.
 
         Parameters
         ----------
         dados : Emissao
-            Estrutura que representa o detalhamento dos dados necessários para 
+            Estrutura que representa o detalhamento dos dados necessários para
             a emissão de um boleto.
 
         Returns
         -------
         BoletoResponse
-            Dicionário que descreve o resultado de uma emissão de boleto bem 
+            Dicionário que descreve o resultado de uma emissão de boleto bem
             sucedida.
 
         Raises
         ------
         ValueError
-            Caso esta instância já tenha emitido ou consultado detalhadamente 
+            Caso esta instância já tenha emitido ou consultado detalhadamente
             algum boleto.
 
         Examples
@@ -127,8 +128,8 @@ class Boleto:
         ... )
         >>> result = boleto.emitir(emissao)
         >>> print(result)
-        {'seuNumero': '00001', 'nossoNumero': '00123456789', 
-         'codigoBarras': '00000000000000000000000000000000000000000000', 
+        {'seuNumero': '00001', 'nossoNumero': '00123456789',
+         'codigoBarras': '00000000000000000000000000000000000000000000',
          'linhaDigitavel': '00000000000000000000000000000000000000000000000'}
 
         """
@@ -137,14 +138,14 @@ class Boleto:
 
         result = emitir_boleto(dados, self.configs)
         self._emitido = True
-        self._numero = result['nossoNumero']
+        self._numero = result["nossoNumero"]
         return result
 
     def consulta_detalhada(self, nosso_numero: str) -> BoletoDetail:
         """Recupera as informações de um boleto.
 
-        Está pesquisa retorna as informações de um boleto no padrão D+0, ou 
-        seja, as informações do boleto são consultadas diretamente na CIP 
+        Está pesquisa retorna as informações de um boleto no padrão D+0, ou
+        seja, as informações do boleto são consultadas diretamente na CIP
         refletindo a situação em tempo real.
 
         Parameters
@@ -207,13 +208,16 @@ class Boleto:
         return detail
 
     @overload
-    def consulta_pdf(self, nosso_numero: str) -> BytesIO: ...
+    def consulta_pdf(self, nosso_numero: str) -> BytesIO:
+        ...
 
     @overload
-    def consulta_pdf(self, nosso_numero: str, filename: PathType) -> None: ...
+    def consulta_pdf(self, nosso_numero: str, filename: PathType) -> None:
+        ...
 
-    def consulta_pdf(self, nosso_numero: str,
-                     filename: Optional[PathType] = None) -> Optional[BytesIO]:
+    def consulta_pdf(
+        self, nosso_numero: str, filename: Optional[PathType] = None
+    ) -> Optional[BytesIO]:
         """Captura o boleto em um buffer na memória ou em arquivo.
 
         Parameters
@@ -222,16 +226,16 @@ class Boleto:
             Número identificador do título.
 
         filename : Optional[PathType], optional
-            Nome do arquivo a ser salvo. Caso seja especificado, salva o 
+            Nome do arquivo a ser salvo. Caso seja especificado, salva o
             conteúdo do buffer (BytesIO) no arquivo.
 
         Returns
         -------
         Optional[BytesIO]
-            Objeto do tipo bytes se `filename` não for especificado (None). 
+            Objeto do tipo bytes se `filename` não for especificado (None).
             Já é decodificado (base64) e pronto pra manuseio.
 
-            Se `filename` for especificado (not None), não há retorno desta 
+            Se `filename` for especificado (not None), não há retorno desta
             função.
 
         Examples
@@ -259,35 +263,39 @@ class Boleto:
         self._numero = nosso_numero
         return pdf
 
-    def consulta_lista(self, data_inicial: date, data_final: date,
-                       filtrar: Optional[FiltrarEnum] = None,
-                       ordenar: Optional[OrdenarEnum] = None,
-                       page: Optional[int] = None,
-                       size: Optional[int] = None) -> ResponseList:
-        """Recupera uma coleção de boletos por um período específico, de acordo 
+    def consulta_lista(
+        self,
+        data_inicial: date,
+        data_final: date,
+        filtrar: Optional[FiltrarEnum] = None,
+        ordenar: Optional[OrdenarEnum] = None,
+        page: Optional[int] = None,
+        size: Optional[int] = None,
+    ) -> ResponseList:
+        """Recupera uma coleção de boletos por um período específico, de acordo
         com os parametros informados.
 
-        Está pesquisa retorna os boletos no padrão D+1, ou seja, os boletos 
+        Está pesquisa retorna os boletos no padrão D+1, ou seja, os boletos
         inseridos na data atual só serão visíveis a partir do dia seguinte.
 
         Parameters
         ----------
         data_inicial : date
-            Data de início para o filtro. Esta data corresponde a data de 
+            Data de início para o filtro. Esta data corresponde a data de
             vencimento dos títulos. Isto é, a filtragem vai incluir títulos com
             data de vencimento A PARTIR desta data.
 
         data_final : date
-            Data de fim para o filtro. Esta data corresponde a data de 
+            Data de fim para o filtro. Esta data corresponde a data de
             vencimento dos títulos. Isto é, a filtragem vai incluir títulos com
             data de vencimento ATÉ esta data.
 
         filtrar : Optional[FiltrarEnum], optional
-            Opção para situação atual do boleto, None caso não seja 
+            Opção para situação atual do boleto, None caso não seja
             especificado.
 
         ordenar : Optional[OrdenarEnum], optional
-            Opção de ordenação do retorno da consulta, None caso não seja 
+            Opção de ordenação do retorno da consulta, None caso não seja
             especificado.
 
         page : Optional[int], optional
@@ -355,17 +363,22 @@ class Boleto:
             'totalPages': 1}
 
         """
-        lista = get_lista_boletos(data_inicial, data_final, self.configs,
-                                  filtrar=filtrar, ordenar=ordenar,
-                                  page=page, size=size)
+        lista = get_lista_boletos(
+            data_inicial,
+            data_final,
+            self.configs,
+            filtrar=filtrar,
+            ordenar=ordenar,
+            page=page,
+            size=size,
+        )
         return lista
 
-    def baixar_boleto(self, nosso_numero: str, codigo_baixa: CodigoBaixaEnum) \
-            -> None:
+    def baixar_boleto(self, nosso_numero: str, codigo_baixa: CodigoBaixaEnum) -> None:
         """Executa a baixa de um boleto.
 
-        O registro da baixa é realizado no padrão D+1, ou seja, os boletos 
-        baixados na data atual só serão baixados na base centralizada partir do 
+        O registro da baixa é realizado no padrão D+1, ou seja, os boletos
+        baixados na data atual só serão baixados na base centralizada partir do
         dia seguinte.
 
         Parameters

@@ -15,6 +15,7 @@ class CodigoMultaEnum(Enum):
     - VF -> Valor fixo;
     - P -> Percentual;
     """
+
     NTM = "NAOTEMMULTA"
     VF = "VALORFIXO"
     P = "PERCENTUAL"
@@ -43,8 +44,8 @@ class MultaConsulta(ConvertDateMixin):
     -----
 
     Contém as seguintes validações:
-    - data:    
-        1. Obrigatório para códigos de multa (veja `CodigoMultaEnum`) `VF` e 
+    - data:
+        1. Obrigatório para códigos de multa (veja `CodigoMultaEnum`) `VF` e
         `P`;
         2. Deve ser vazio ('') para código `NTM`;
         3. Não informar ('') para os demais códigos;
@@ -60,6 +61,7 @@ class MultaConsulta(ConvertDateMixin):
         1. Obrigatório para código de multa `VF`;
         2. Deve ser 0 para código `NTM`;
     """
+
     codigo: Union[str, CodigoMultaEnum]
     taxa: float = 0.0
     valor: float = 0.0
@@ -74,7 +76,7 @@ class MultaConsulta(ConvertDateMixin):
             assert is_zero_float(self.valor)
 
         else:
-            self.convert_date('data')
+            self.convert_date("data")
 
             if self.codigo == CodigoMultaEnum.VF:
                 assert is_non_zero_positive_float(self.valor)
@@ -106,8 +108,8 @@ class MultaEmissao(ConvertDateMixin):
     -----
 
     Contém as seguintes validações:
-    - data:    
-        1. Obrigatório para códigos de multa (veja `CodigoMultaEnum`) `VF` e 
+    - data:
+        1. Obrigatório para códigos de multa (veja `CodigoMultaEnum`) `VF` e
         `P`;
         2. Deve ser vazio ('') para código `NTM`;
         3. Não informar ('') para os demais códigos;
@@ -123,6 +125,7 @@ class MultaEmissao(ConvertDateMixin):
         1. Obrigatório para código de multa `VF`;
         2. Deve ser 0 para código `NTM`;
     """
+
     codigoMulta: Union[str, CodigoMultaEnum]
     taxa: float = 0.0
     valor: float = 0.0
@@ -137,7 +140,7 @@ class MultaEmissao(ConvertDateMixin):
             assert is_zero_float(self.valor)
 
         else:
-            self.convert_date('data')
+            self.convert_date("data")
 
             if self.codigoMulta == CodigoMultaEnum.VF:
                 assert is_non_zero_positive_float(self.valor)

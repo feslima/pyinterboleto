@@ -2,21 +2,21 @@ from dataclasses import dataclass
 from datetime import date, datetime
 from typing import Union
 
-from dacite import from_dict
+from dacite.core import from_dict
 from requests import get
 
 from ..common.desconto import DescontoConsulta
 from ..common.mora import MoraConsulta
 from ..common.multa import MultaConsulta
 from ..utils.requests import RequestConfigs, get_api_configs
-from ..utils.sanitize import (ConvertDateMixin, ConvertDatetimeMixin,
-                              check_response)
+from ..utils.sanitize import ConvertDateMixin, ConvertDatetimeMixin, check_response
 from ..utils.url import API_URL
 
 
 @dataclass
 class BoletoDetail(ConvertDateMixin, ConvertDatetimeMixin):
     """Objeto de respresentação de um boleto detalhado."""
+
     nomeBeneficiario: str
     cnpjCpfBeneficiario: str
     tipoPessoaBeneficiario: str
@@ -42,23 +42,22 @@ class BoletoDetail(ConvertDateMixin, ConvertDatetimeMixin):
     desconto3: DescontoConsulta
     multa: MultaConsulta
     mora: MoraConsulta
-    situacaoPagamento: str = ''
+    situacaoPagamento: str = ""
     valorTotalRecebimento: float = 0.0
 
     def __post_init__(self):
-        self.convert_date('dataVencimento')
-        self.convert_date('dataEmissao')
-        self.convert_date('dataLimitePagamento')
+        self.convert_date("dataVencimento")
+        self.convert_date("dataEmissao")
+        self.convert_date("dataLimitePagamento")
 
-        self.convert_datetime('dataHoraSituacao')
+        self.convert_datetime("dataHoraSituacao")
 
 
-def get_boleto_detail(nosso_numero: str, configs: RequestConfigs) \
-        -> BoletoDetail:
+def get_boleto_detail(nosso_numero: str, configs: RequestConfigs) -> BoletoDetail:
     """Recupera as informações de um boleto.
 
-    Está pesquisa retorna as informações de um boleto no padrão D+0, ou seja, 
-    as informações do boleto são consultadas diretamente na CIP refletindo a 
+    Está pesquisa retorna as informações de um boleto no padrão D+0, ou seja,
+    as informações do boleto são consultadas diretamente na CIP refletindo a
     situação em tempo real.
 
     Parameters
@@ -66,7 +65,7 @@ def get_boleto_detail(nosso_numero: str, configs: RequestConfigs) \
     nosso_numero : str
         Número identificador do título.
     configs : RequestConfigs
-        Dicionário de configuração com número de conta e certificados de 
+        Dicionário de configuração com número de conta e certificados de
         autenticação.
 
     Returns
@@ -76,9 +75,9 @@ def get_boleto_detail(nosso_numero: str, configs: RequestConfigs) \
     """
     acc, certificate, key = get_api_configs(configs)
 
-    headers = {'x-inter-conta-corrente': acc}
+    headers = {"x-inter-conta-corrente": acc}
 
-    URL = API_URL + f'/{nosso_numero}'
+    URL = API_URL + f"/{nosso_numero}"
     response = get(URL, headers=headers, cert=(certificate, key))
 
     contents = check_response(response, "Boleto não encontrado.")
