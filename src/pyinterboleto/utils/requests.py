@@ -1,14 +1,10 @@
+from typing import Tuple, TypedDict
 
-from pathlib import Path
-from typing import Tuple, TypedDict, Union
-
-from .sanitize import check_file, strip_chars
-
-PathType = Union[str, Path]
+from .sanitize import PathType, check_file, strip_chars
 
 
 class RequestConfigs(TypedDict):
-    """Dicionário contendo as configurações necessárias para se comunicar com a 
+    """Dicionário contendo as configurações necessárias para se comunicar com a
     API do banco Inter.
 
     Parameters
@@ -17,11 +13,11 @@ class RequestConfigs(TypedDict):
         Número da conta PJ.
 
     certificate: PathType
-        Caminho para o arquivo de certificado (.crt) que é emitido de acordo 
+        Caminho para o arquivo de certificado (.crt) que é emitido de acordo
         com a documentação no site do banco Inter.
 
     key: PathType
-        Caminho para o arquivo de chave (.key) que é emitido de acordo com a 
+        Caminho para o arquivo de chave (.key) que é emitido de acordo com a
         documentação no site do banco Inter.
 
     Examples
@@ -42,14 +38,15 @@ class RequestConfigs(TypedDict):
      'key': PosixPath('caminho/para/pasta/com/certificados/Inter API_Chave.key')}
 
     """
+
     conta_inter: str
     certificate: PathType
     key: PathType
 
 
-def get_api_configs(configs: RequestConfigs) -> Tuple[str, Path, Path]:
-    certificate = str(check_file(configs['certificate']))
-    key = str(check_file(configs['key']))
-    acc = strip_chars(configs['conta_inter'])
+def get_api_configs(configs: RequestConfigs) -> Tuple[str, str, str]:
+    certificate = str(check_file(configs["certificate"]))
+    key = str(check_file(configs["key"]))
+    acc = strip_chars(configs["conta_inter"])
 
     return acc, certificate, key
