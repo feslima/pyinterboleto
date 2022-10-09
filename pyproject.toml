@@ -16,8 +16,7 @@ dacite = "^1.6.0"
 tabulate = "^0.8.9"
 Unidecode = "^1.2.0"
 
-[tool.poetry.dev-dependencies]
-autopep8 = "pytest"
+[tool.poetry.group.dev.dependencies]
 pytest = "^6.2.4"
 python-dotenv = "^0.19.0"
 prettyprinter = "^0.18.0"

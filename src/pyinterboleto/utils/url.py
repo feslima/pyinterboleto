@@ -1,1 +1,1 @@
-API_URL = 'https://apis.bancointer.com.br:8443/openbanking/v1/certificado/boletos'
+API_URL = "https://cdpj.partners.bancointer.com.br/cobranca/v2/boletos"

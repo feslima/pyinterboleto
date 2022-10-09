@@ -5,10 +5,11 @@ from typing import Union
 from dacite.core import from_dict
 from requests import get
 
+from ..auth import get_api_configs
 from ..common.desconto import DescontoConsulta
 from ..common.mora import MoraConsulta
 from ..common.multa import MultaConsulta
-from ..utils.requests import RequestConfigs, get_api_configs
+from ..utils.requests import RequestConfigs
 from ..utils.sanitize import ConvertDateMixin, ConvertDatetimeMixin, check_response
 from ..utils.url import API_URL
 
@@ -73,9 +74,9 @@ def get_boleto_detail(nosso_numero: str, configs: RequestConfigs) -> BoletoDetai
     BoletoDetail
         Objeto de representação detalhada de um boleto.
     """
-    acc, certificate, key = get_api_configs(configs)
+    token, certificate, key = get_api_configs(configs)
 
-    headers = {"x-inter-conta-corrente": acc}
+    headers = {"Authorization": f"Bearer {token}"}
 
     URL = API_URL + f"/{nosso_numero}"
     response = get(URL, headers=headers, cert=(certificate, key))

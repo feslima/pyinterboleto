@@ -4,12 +4,12 @@ from pathlib import Path
 
 from requests import get
 
-from ..utils.requests import PathType, RequestConfigs, get_api_configs
+from ..auth import get_api_configs
+from ..utils.requests import PathType, RequestConfigs
 from ..utils.url import API_URL
 
 
-def get_pdf_boleto_in_memory(nosso_numero: str, configs: RequestConfigs) \
-        -> BytesIO:
+def get_pdf_boleto_in_memory(nosso_numero: str, configs: RequestConfigs) -> BytesIO:
     """Captura o boleto em um buffer na memória.
 
     Parameters
@@ -18,7 +18,7 @@ def get_pdf_boleto_in_memory(nosso_numero: str, configs: RequestConfigs) \
         Número identificador do título.
 
     configs : RequestConfigs
-        Dicionário de configuração com número de conta e certificados de 
+        Dicionário de configuração com número de conta e certificados de
         autenticação.
 
     Returns
@@ -31,11 +31,11 @@ def get_pdf_boleto_in_memory(nosso_numero: str, configs: RequestConfigs) \
     ValueError
         Não foi possível obter uma resposta bem sucedida
     """
-    acc, certificate, key = get_api_configs(configs)
+    token, certificate, key = get_api_configs(configs)
 
-    headers = {'x-inter-conta-corrente': acc}
+    headers = {"Authorization": f"Bearer {token}"}
 
-    URL = API_URL + f'/{nosso_numero}/pdf'
+    URL = API_URL + f"/{nosso_numero}/pdf"
 
     response = get(URL, headers=headers, cert=(certificate, key))
 
@@ -45,8 +45,9 @@ def get_pdf_boleto_in_memory(nosso_numero: str, configs: RequestConfigs) \
     return BytesIO(b64decode(response.content))
 
 
-def get_pdf_boleto_to_file(nosso_numero: str, filename: PathType,
-                           configs: RequestConfigs) -> None:
+def get_pdf_boleto_to_file(
+    nosso_numero: str, filename: PathType, configs: RequestConfigs
+) -> None:
     """Salva o boleto em um arquivo .pdf.
 
     Parameters
@@ -58,7 +59,7 @@ def get_pdf_boleto_to_file(nosso_numero: str, filename: PathType,
         Nome do arquivo a ser salvo.
 
     configs : RequestConfigs
-        Dicionário de configuração com número de conta e certificados de 
+        Dicionário de configuração com número de conta e certificados de
         autenticação.
 
     Raises
@@ -74,7 +75,7 @@ def get_pdf_boleto_to_file(nosso_numero: str, filename: PathType,
     if filename.exists():
         raise FileExistsError("Um arquivo com este nome já existe.")
 
-    if filename.suffix != '.pdf':
+    if filename.suffix != ".pdf":
         raise ValueError("Extensão do arquivo deve ser .pdf.")
 
     pdf_bytes = get_pdf_boleto_in_memory(nosso_numero, configs)

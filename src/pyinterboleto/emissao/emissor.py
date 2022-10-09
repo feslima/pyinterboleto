@@ -6,11 +6,12 @@ from typing import Any, Dict, Literal, TypedDict, Union
 
 from requests import post
 
+from ..auth import get_api_configs
 from ..common.desconto import CodigoDescontoEnum, DescontoEmissao
 from ..common.mora import CodigoMoraEnum, MoraEmissao
 from ..common.multa import CodigoMultaEnum, MultaEmissao
 from ..utils.floats import is_non_zero_positive_float, is_positive_float
-from ..utils.requests import RequestConfigs, get_api_configs
+from ..utils.requests import RequestConfigs
 from ..utils.sanitize import (
     ConvertDateMixin,
     check_response,

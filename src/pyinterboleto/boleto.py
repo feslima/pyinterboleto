@@ -101,12 +101,15 @@ class Boleto:
         >>> from pathlib import Path
         >>> from datetime import date, timedelta
         >>> from pprint import pprint
-        >>> from pyinterboleto import Boleto, Emissao, Pagador, RequestConfigs
+        >>> from pyinterboleto import Boleto, Emissao, Pagador, RequestConfigs, ScopeEnum
         >>> direc = Path('caminho/para/pasta/com/certificados')
         >>> cert = direc / 'Inter API_Certificado.crt'
         >>> key = direc / 'Inter API_Chave.key'
-        >>> acc = '12345678'
-        >>> configs = RequestConfigs(conta_inter=acc, certificate=cert, key=key)
+        >>> # client_id e client_secret são obtidos de acordo com a documentação do Inter
+        >>> client_id = 'valor-do-id-uuid'
+        >>> client_secret = 'valor-do-secret-uuid'
+        >>> scopes = (ScopeEnum.EXTRATO_READ, ScopeEnum.BOLETO_COBRANCA_READ)
+        >>> configs = RequestConfigs(client_id=client_id, client_secret=client_secret, scopes=scopes, certificate=cert, key=key)
         >>> boleto = Boleto(configs)
         >>> pagador = Pagador(
         ...     tipoPessoa='FISICA',
@@ -166,12 +169,15 @@ class Boleto:
         --------
         >>> from pathlib import Path
         >>> from pprint import pprint
-        >>> from pyinterboleto import Boleto, RequestConfigs
+        >>> from pyinterboleto import Boleto, RequestConfigs, ScopeEnum
         >>> direc = Path('caminho/para/pasta/com/certificados')
         >>> cert = direc / 'Inter API_Certificado.crt'
         >>> key = direc / 'Inter API_Chave.key'
-        >>> acc = '12345678'
-        >>> configs = RequestConfigs(conta_inter=acc, certificate=cert, key=key)
+        >>> # client_id e client_secret são obtidos de acordo com a documentação do Inter
+        >>> client_id = 'valor-do-id-uuid'
+        >>> client_secret = 'valor-do-secret-uuid'
+        >>> scopes = (ScopeEnum.EXTRATO_READ, ScopeEnum.BOLETO_COBRANCA_READ)
+        >>> configs = RequestConfigs(client_id=client_id, client_secret=client_secret, scopes=scopes, certificate=cert, key=key)
         >>> boleto = Boleto(configs)
         >>> num_boleto = '00123456789'
         >>> detail = boleto.consulta_detalhada(num_boleto)
@@ -241,11 +247,16 @@ class Boleto:
         Examples
         --------
         >>> from pathlib import Path
-        >>> from pyinterboleto import Boleto, RequestConfigs
+        >>> from pyinterboleto import Boleto, RequestConfigs, ScopeEnum
         >>> direc = Path('caminho/para/pasta/com/certificados')
         >>> cert = direc / 'Inter API_Certificado.crt'
         >>> key = direc / 'Inter API_Chave.key'
-        >>> acc = '12345678'
+        >>> # client_id e client_secret são obtidos de acordo com a documentação do Inter
+        >>> client_id = 'valor-do-id-uuid'
+        >>> client_secret = 'valor-do-secret-uuid'
+        >>> scopes = (ScopeEnum.EXTRATO_READ, ScopeEnum.BOLETO_COBRANCA_READ)
+        >>> configs = RequestConfigs(client_id=client_id, client_secret=client_secret, scopes=scopes, certificate=cert, key=key)
+        >>> boleto = Boleto(configs)
         >>> configs = RequestConfigs(conta_inter=acc, certificate=cert, key=key)
         >>> boleto = Boleto(configs)
         >>> num_boleto = '00123456789'
@@ -314,12 +325,15 @@ class Boleto:
         >>> from pathlib import Path
         >>> from pprint import pprint
         >>> from datetime import date, timedelta
-        >>> from pyinterboleto import Boleto, RequestConfigs
+        >>> from pyinterboleto import Boleto, RequestConfigs, ScopeEnum
         >>> direc = Path('caminho/para/pasta/com/certificados')
         >>> cert = direc / 'Inter API_Certificado.crt'
         >>> key = direc / 'Inter API_Chave.key'
-        >>> acc = '12345678'
-        >>> configs = RequestConfigs(conta_inter=acc, certificate=cert, key=key)
+        >>> # client_id e client_secret são obtidos de acordo com a documentação do Inter
+        >>> client_id = 'valor-do-id-uuid'
+        >>> client_secret = 'valor-do-secret-uuid'
+        >>> scopes = (ScopeEnum.EXTRATO_READ, ScopeEnum.BOLETO_COBRANCA_READ)
+        >>> configs = RequestConfigs(client_id=client_id, client_secret=client_secret, scopes=scopes, certificate=cert, key=key)
         >>> boleto = Boleto(configs)
         >>> inicial = date.today() - timedelta(days=30)
         >>> final = date.today()
@@ -393,12 +407,15 @@ class Boleto:
         --------
         >>> from pathlib import Path
         >>> from pprint import pprint
-        >>> from pyinterboleto import Boleto, RequestConfigs, CodigoBaixaEnum
+        >>> from pyinterboleto import Boleto, RequestConfigs, CodigoBaixaEnum, ScopeEnum
         >>> direc = Path('caminho/para/pasta/com/certificados')
         >>> cert = direc / 'Inter API_Certificado.crt'
         >>> key = direc / 'Inter API_Chave.key'
-        >>> acc = '12345678'
-        >>> configs = RequestConfigs(conta_inter=acc, certificate=cert, key=key)
+        >>> # client_id e client_secret são obtidos de acordo com a documentação do Inter
+        >>> client_id = 'valor-do-id-uuid'
+        >>> client_secret = 'valor-do-secret-uuid'
+        >>> scopes = (ScopeEnum.EXTRATO_READ, ScopeEnum.BOLETO_COBRANCA_READ)
+        >>> configs = RequestConfigs(client_id=client_id, client_secret=client_secret, scopes=scopes, certificate=cert, key=key)
         >>> boleto = Boleto(configs)
         >>> num_boleto = '00123456789'
         >>> boleto.baixar_boleto(num_boleto, CodigoBaixaEnum.PC)

@@ -3,7 +3,8 @@ from json import dumps
 
 from requests import post
 
-from ..utils.requests import RequestConfigs, get_api_configs
+from ..auth import get_api_configs
+from ..utils.requests import RequestConfigs
 from ..utils.url import API_URL
 
 
