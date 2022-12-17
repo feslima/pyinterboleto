@@ -9,8 +9,8 @@ PathType = Union[str, Path]
 
 
 def strip_chars(value: str) -> str:
-    """Strips '.', '-' and '/' from `value`."""
-    return re.sub("[\.\-/]", "", value)
+    """Strips non numeric values from `value`."""
+    return re.sub(r"\D", "", value)
 
 
 def sanitize_cpf(value: str) -> str:

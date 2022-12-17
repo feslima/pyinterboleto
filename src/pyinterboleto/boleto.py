@@ -26,36 +26,17 @@ class Boleto:
         Dicionário de configuração com número de conta e certificados de
         autenticação.
 
-    Notes
-    -----
-    No caso de emissões, o método `emitir` só pode ser chamado caso a instância
-    desta classe não tenha feito qualquer consulta detalhada (i.e. que tenha
-    chamado os métodos `consulta_detalhada` ou `consulta_pdf`) ou emissão
-    prévia. Isto é para evitar emissões com numerações repetidas e demais
-    conflitos.
-
-    Ou seja, múltiplas consultas detalhadas com a mesma instância são
-    permitidas, e emissão só é permitida uma vez por instância e que não tenha
-    havido consultas detalhadas prévias.
+    auth_token: str, optional
+        Caso queira reaproveitar um token de autenticação já emitido (e que seja
+        válido), basta fornecer ele. Caso contrário, será emitido um novo token de
+        autenticação quando invocar qualquer uma das operações desta classe pela
+        primeira vez no ciclo de vida da instância.
 
     """
 
-    def __init__(self, configs: RequestConfigs) -> None:
+    def __init__(self, configs: RequestConfigs, auth_token: str = "") -> None:
         self._configs = configs
-        self._emitido: bool = False
-        self._numero: str = ""
-        self._auth_token: str = ""
-
-    def __str__(self) -> str:
-        numero = self.numero if self.numero != "" else "não tem"
-        foi_emitido = "sim" if self.emitido else "não"
-        emissivel = "sim" if self.pode_emitir else "não"
-        string = (
-            f"Número: {numero}\nFoi emitido: {foi_emitido}\n"
-            f"É emissivel: {emissivel}"
-        )
-
-        return string
+        self._auth_token = auth_token
 
     @property
     def auth_token(self) -> str:
@@ -63,6 +44,7 @@ class Boleto:
         Se a requisição de obtenção de token ainda não foi chamada (e.g. esta
         classe foi instanciada mas não teve nenhuma operação realizada) uma
         requisição de authenticação será feita."""
+
         if getattr(self, "_auth_token", "") == "":
             self._auth_token = get_auth_token(self.configs)
 
@@ -72,30 +54,14 @@ class Boleto:
     def configs(self) -> RequestConfigs:
         return self._configs
 
-    @property
-    def emitido(self) -> bool:
-        return self._emitido
-
-    @property
-    def pode_emitir(self) -> bool:
-        return self._numero == "" and not self.emitido
-
-    @property
-    def numero(self) -> str:
-        """Número de identificação do boleto na API.
-
-        Se o boleto ainda não foi emitido, ou houve alguma consulta detalhada
-        (`consulta_detalhada` ou `consulta_pdf`), essa propriedade é um string
-        vazio.
-        """
-        return self._numero
-
     def emitir(self, dados: Emissao) -> BoletoResponse:
         """Emite um boleto baseado nos `dados` provisionados.
 
         O boleto incluído estará disponível para consulta e pagamento, após
         um tempo apróximado de 5 minutos da sua inclusão. Esse tempo é
         necessário para o registro do boleto na CIP.
+
+        Escopo requerido: ScopeEnum.BOLETO_COBRANCA_WRITE
 
         Parameters
         ----------
@@ -109,45 +75,48 @@ class Boleto:
             Dicionário que descreve o resultado de uma emissão de boleto bem
             sucedida.
 
-        Raises
-        ------
-        ValueError
-            Caso esta instância já tenha emitido ou consultado detalhadamente
-            algum boleto.
-
         Examples
         --------
         >>> from pathlib import Path
         >>> from datetime import date, timedelta
         >>> from pprint import pprint
-        >>> from pyinterboleto import Boleto, Emissao, Pagador, RequestConfigs, ScopeEnum
+        >>> from pyinterboleto import Boleto, Emissao, Pagador, Beneficiario, RequestConfigs, ScopeEnum
         >>> direc = Path('caminho/para/pasta/com/certificados')
         >>> cert = direc / 'Inter API_Certificado.crt'
         >>> key = direc / 'Inter API_Chave.key'
         >>> # client_id e client_secret são obtidos de acordo com a documentação do Inter
         >>> client_id = 'valor-do-id-uuid'
         >>> client_secret = 'valor-do-secret-uuid'
-        >>> scopes = (ScopeEnum.EXTRATO_READ, ScopeEnum.BOLETO_COBRANCA_READ)
+        >>> scopes = (ScopeEnum.BOLETO_COBRANCA_WRITE,)
         >>> configs = RequestConfigs(client_id=client_id, client_secret=client_secret, scopes=scopes, certificate=cert, key=key)
         >>> boleto = Boleto(configs)
         >>> pagador = Pagador(
-        ...     tipoPessoa='FISICA',
-        ...     cnpjCpf='123.456.789-09',
-        ...     nome="Pessoa Ficticia da Silva",
-        ...     endereco="Rua Fantasia",
-        ...     numero='300',
-        ...     bairro='Centro',
-        ...     cidade='São Paulo',
-        ...     uf='SP',
-        ...     cep='123456-789'
-        ... )
-        ... emissao = Emissao(
-        ...     pagador=pagador, seuNumero='00001',
-        ...     cnpjCPFBeneficiario='12.345.678/0001-01',
-        ...     valorNominal=0.01,
-        ...     dataEmissao=date.today(),
-        ...     dataVencimento=date.today()+timedelta(days=2)
-        ... )
+        ...    cpfCnpj="12.345.678/0001-12",
+        ...    tipoPessoa=TipoPessoa.JURIDICA,
+        ...    nome="Alguma Empresa LTDA",
+        ...    endereco="Qulaquer um",
+        ...    cidade="Também do Brasil",
+        ...    uf="SP",
+        ...    cep="12345-678",
+        ...)
+        >>> beneficiario = Beneficiario(
+        ...    cpfCnpj="123.456.789-01",
+        ...    tipoPessoa=TipoPessoa.FISICA,
+        ...    nome="Algum Nome de Pessoa",
+        ...    endereco="Algum lugar",
+        ...    bairro="Qualquer",
+        ...    cidade="Do Brasil",
+        ...    uf="SP",
+        ...    cep="12345-678",
+        ...)
+        >>> dados = Emissao(
+        ...    pagador=pagador,
+        ...    beneficiario=beneficiario,
+        ...    seuNumero="000001",
+        ...    valorNominal=10.01,
+        ...    dataVencimento="2023-01-01",
+        ...    numDiasAgenda=25,
+        )
         >>> result = boleto.emitir(emissao)
         >>> print(result)
         {'seuNumero': '00001', 'nossoNumero': '00123456789',
@@ -155,12 +124,7 @@ class Boleto:
          'linhaDigitavel': '00000000000000000000000000000000000000000000000'}
 
         """
-        if not self.pode_emitir:
-            raise ValueError("Este boleto já foi emitido.")
-
-        result = emitir_boleto(dados, self.configs)
-        self._emitido = True
-        self._numero = result["nossoNumero"]
+        result = emitir_boleto(dados, self.configs, self.auth_token)
         return result
 
     def consulta_detalhada(self, nosso_numero: str) -> BoletoDetail:
@@ -206,7 +170,6 @@ class Boleto:
 
         """
         detail = get_boleto_detail(nosso_numero, self.configs, self.auth_token)
-        self._numero = nosso_numero
         return detail
 
     @overload
@@ -269,7 +232,6 @@ class Boleto:
                 nosso_numero, filename, self.configs, self.auth_token
             )
 
-        self._numero = nosso_numero
         return pdf
 
     def consulta_lista(
@@ -389,7 +351,7 @@ class Boleto:
     ) -> None:
         """Executa o cancelamento de um boleto.
 
-        Escopo requerido: boleto-cobranca.write
+        Escopo requerido: ScopeEnum.BOLETO_COBRANCA_WRITE
 
         Parameters
         ----------

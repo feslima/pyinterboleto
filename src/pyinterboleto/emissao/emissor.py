@@ -2,7 +2,7 @@ from dataclasses import asdict, dataclass, field
 from datetime import date
 from enum import Enum
 from json import JSONEncoder, dumps
-from typing import Any, Dict, Literal, TypedDict, Union
+from typing import Any, Dict, TypedDict, Union
 
 from requests import post
 
@@ -10,16 +10,11 @@ from ..auth import get_api_configs
 from ..common.desconto import CodigoDescontoEnum, DescontoEmissao
 from ..common.mora import CodigoMoraEnum, MoraEmissao
 from ..common.multa import CodigoMultaEnum, MultaEmissao
-from ..utils.floats import is_non_zero_positive_float, is_positive_float
+from ..utils.floats import is_non_zero_positive_float
 from ..utils.requests import RequestConfigs
-from ..utils.sanitize import (
-    ConvertDateMixin,
-    check_response,
-    sanitize_cnpj,
-    sanitize_cpf,
-    strip_chars,
-)
+from ..utils.sanitize import ConvertDateMixin, check_response
 from ..utils.url import API_URL
+from .beneficiario import Beneficiario
 from .mensagem import MENSAGEM_VAZIA, Mensagem
 from .pagador import Pagador
 
@@ -35,7 +30,6 @@ class DefaultEncoder(JSONEncoder):
 
 
 SerializedDict = Dict[str, Union[str, float]]
-NUM_DIAS_AGENDA = Literal["TRINTA", "SESSENTA"]
 
 
 SEM_DESCONTO_DICT = DescontoEmissao(codigoDesconto=CodigoDescontoEnum.NTD)
@@ -56,32 +50,23 @@ class Emissao(ConvertDateMixin):
     pagador: Pagador
         Dados do pagador.
 
+    beneficiario: Beneficiario
+        Dados do beneficiário final.
+
     seuNumero: str
         Campo Seu Número do título.
 
-    cnpjCPFBeneficiario: str
-        CPF/CNPJ do beneficiário do título.
-
     valorNominal: float
-        Valor Nominal do título
-
-    dataEmissao: Union[str, date]
-        Data de emissão do título. Se o valor informado for do tipo str, terá
-        que ser no formato AAAA-MM-DD (ISO8601), e será convertido para o tipo
-        date.
+        Valor Nominal do título.
 
     dataVencimento: Union[str, date]
         Data de vencimento do título. Se o valor informado for do tipo str, terá
         que ser no formato AAAA-MM-DD (ISO8601), e será convertido para o tipo
         date.
 
-    valorAbatimento: float, optional
-        Valor de abatimento do título, expresso na mesma moeda do
-        `valorNominal`. Caso não seja especificado, valor será 0.0.
-
-    numDiasAgenda: Literal['TRINTA', 'SESSENTA'], optional
-        Número de dias corridos após o vencimento para baixa efetiva automática
-        do boleto. Caso não seja especificado, valor será 'TRINTA'.
+    numDiasAgenda: int
+        Número de dias corridos após o vencimento para cancelamento efetivo automático
+        do boleto. Valor minimo 0, valor máximo 60 dias.
 
     mensagem: Mensagem, optional
         Mensagem a ser inserida no canhoto do boleto. Caso não seja especificado
@@ -140,42 +125,25 @@ class Emissao(ConvertDateMixin):
 
     """
 
-    # mandatory fields
     pagador: Pagador
+    beneficiario: Beneficiario
     seuNumero: str
-    cnpjCPFBeneficiario: str
     valorNominal: float
-    dataEmissao: Union[str, date]
     dataVencimento: Union[str, date]
-    numDiasAgenda: NUM_DIAS_AGENDA = field(default="TRINTA")
+    numDiasAgenda: int
+    mensagem: Mensagem = field(default=MENSAGEM_VAZIA)
     desconto1: DescontoEmissao = field(default=SEM_DESCONTO_DICT)
     desconto2: DescontoEmissao = field(default=SEM_DESCONTO_DICT)
     desconto3: DescontoEmissao = field(default=SEM_DESCONTO_DICT)
     multa: MultaEmissao = field(default=SEM_MULTA)
     mora: MoraEmissao = field(default=SEM_MORA)
 
-    # optional fields
-    valorAbatimento: float = 0.0
-    mensagem: Mensagem = field(default=MENSAGEM_VAZIA)
-
     def __post_init__(self):
-        assert len(self.seuNumero) <= 15 and self.seuNumero != ""
-
-        self.cnpjCPFBeneficiario = strip_chars(self.cnpjCPFBeneficiario)
-        if len(self.cnpjCPFBeneficiario) == 11:
-            self.cnpjCPFBeneficiario = sanitize_cpf(self.cnpjCPFBeneficiario)
-        else:
-            self.cnpjCPFBeneficiario = sanitize_cnpj(self.cnpjCPFBeneficiario)
-
-        assert len(self.cnpjCPFBeneficiario) == 14
+        assert 1 <= len(self.seuNumero) <= 15
 
         assert is_non_zero_positive_float(self.valorNominal)
 
-        assert is_positive_float(self.valorAbatimento)
-
         self.convert_date("dataVencimento")
-        self.convert_date("dataEmissao")
-        assert self.dataVencimento >= self.dataEmissao
 
         if self.multa.codigoMulta != CodigoMultaEnum.NTM:
             assert self.multa.data > self.dataVencimento
@@ -218,7 +186,9 @@ class BoletoResponse(TypedDict):
     linhaDigitavel: str
 
 
-def emitir_boleto(dados: Emissao, configs: RequestConfigs) -> BoletoResponse:
+def emitir_boleto(
+    dados: Emissao, configs: RequestConfigs, token: str
+) -> BoletoResponse:
     """Emite um boleto baseado nos `dados` provisionados.
 
     O boleto incluído estará disponível para consulta e pagamento, após
@@ -235,17 +205,21 @@ def emitir_boleto(dados: Emissao, configs: RequestConfigs) -> BoletoResponse:
         Dicionário de configuração com número de conta e certificados de
         autenticação.
 
+    token : str
+        Token de autenticação da API do Banco Inter. Veja:
+        https://developers.bancointer.com.br/reference/obtertoken
+
     Returns
     -------
     BoletoResponse
         Dicionário que descreve o resultado de uma emissão de boleto bem
         sucedida.
     """
-    acc, certificate, key = get_api_configs(configs)
-    headers = {"content-type": "application/json", "x-inter-conta-corrente": acc}
+    certificate, key = get_api_configs(configs)
+    headers = {"Content-Type": "application/json", "Authorization": f"Bearer {token}"}
 
     response = post(
-        API_URL, data=dados.to_json(), headers=headers, cert=(certificate, key)
+        API_URL, json=dados.to_json(), headers=headers, cert=(certificate, key)
     )
 
     contents = check_response(response, "Boleto não foi emitido")
