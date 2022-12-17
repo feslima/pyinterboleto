@@ -1,5 +1,6 @@
 import shutil
 from pathlib import Path
+from unittest.mock import Mock, patch
 
 import pytest
 
@@ -44,3 +45,14 @@ def request_configs(certificate_file: Path, key_file: Path) -> RequestConfigs:
         scopes=ScopeEnum.get_all_scopes(),
         key=key_file,
     )
+
+
+@pytest.fixture(name="patched_auth_request")
+def patched_auth_fixture():
+    with patch("src.pyinterboleto.auth.post") as patched_post:
+        mocked_reponse = Mock()
+        mocked_reponse.status_code = 200
+        mocked_reponse.json = Mock(return_value={"access_token": "some-dummy-token"})
+        patched_post.return_value = mocked_reponse
+
+        yield patched_post

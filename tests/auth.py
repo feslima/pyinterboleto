@@ -1,5 +1,5 @@
 from pathlib import Path
-from unittest.mock import Mock, patch
+from unittest.mock import Mock
 from uuid import uuid4
 
 from src.pyinterboleto.auth import build_auth_body, get_auth_token
@@ -18,7 +18,7 @@ def test_payload_builder():
     assert body == expected_string
 
 
-def test_auth_request_works():
+def test_auth_request_works(patched_auth_request: Mock):
     c_id = uuid4()
     c_secret = uuid4()
     scopes = (ScopeEnum.EXTRATO_READ, ScopeEnum.BOLETO_COBRANCA_READ)
@@ -33,13 +33,8 @@ def test_auth_request_works():
     )
     expected_token_value = "some-dummy-token"
 
-    with patch("src.pyinterboleto.auth.post") as patched_post:
-        mocked_reponse = Mock()
-        mocked_reponse.status_code = 200
-        mocked_reponse.json = Mock(return_value={"access_token": expected_token_value})
-        patched_post.return_value = mocked_reponse
+    token = get_auth_token(configs)
 
-        token = get_auth_token(configs)
+    patched_auth_request.assert_called_once()
 
-    patched_post.assert_called_once()
     assert token == expected_token_value
