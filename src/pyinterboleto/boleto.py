@@ -3,7 +3,7 @@ from io import BytesIO
 from typing import Iterable, Literal, Optional, Union, overload
 
 from .auth import get_auth_token
-from .baixa import CodigoBaixaEnum, executa_baixa
+from .baixa import MotivoCancelamentoEnum, cancelar_boleto
 from .consulta.detalhado import BoletoDetail, get_boleto_detail
 from .consulta.lista import (
     FiltrarDataPorEnum,
@@ -384,37 +384,42 @@ class Boleto:
         )
         return lista
 
-    def baixar_boleto(self, nosso_numero: str, codigo_baixa: CodigoBaixaEnum) -> None:
-        """Executa a baixa de um boleto.
+    def cancelar_boleto(
+        self, nosso_numero: str, motivo: MotivoCancelamentoEnum
+    ) -> None:
+        """Executa o cancelamento de um boleto.
 
-        O registro da baixa é realizado no padrão D+1, ou seja, os boletos
-        baixados na data atual só serão baixados na base centralizada partir do
-        dia seguinte.
+        Escopo requerido: boleto-cobranca.write
 
         Parameters
         ----------
         nosso_numero : str
             Número identificador do título.
 
-        codigo_baixa : CodigoBaixaEnum
+        motivo : MotivoCancelamentoEnum
             Domínio que descreve o tipo de baixa sendo solicitado.
 
         Examples
         --------
         >>> from pathlib import Path
         >>> from pprint import pprint
-        >>> from pyinterboleto import Boleto, RequestConfigs, CodigoBaixaEnum, ScopeEnum
+        >>> from pyinterboleto import Boleto, RequestConfigs, MotivoCancelamentoEnum, ScopeEnum
         >>> direc = Path('caminho/para/pasta/com/certificados')
         >>> cert = direc / 'Inter API_Certificado.crt'
         >>> key = direc / 'Inter API_Chave.key'
         >>> # client_id e client_secret são obtidos de acordo com a documentação do Inter
         >>> client_id = 'valor-do-id-uuid'
         >>> client_secret = 'valor-do-secret-uuid'
-        >>> scopes = (ScopeEnum.EXTRATO_READ, ScopeEnum.BOLETO_COBRANCA_READ)
+        >>> scopes = (ScopeEnum.BOLETO_COBRANCA_WRITE,)
         >>> configs = RequestConfigs(client_id=client_id, client_secret=client_secret, scopes=scopes, certificate=cert, key=key)
         >>> boleto = Boleto(configs)
         >>> num_boleto = '00123456789'
-        >>> boleto.baixar_boleto(num_boleto, CodigoBaixaEnum.PC)
+        >>> boleto.cancelar_boleto(num_boleto, MotivoCancelamentoEnum.A_PEDIDO_DO_CLIENTE)
 
         """
-        executa_baixa(nosso_numero, codigo_baixa, self.configs)
+        cancelar_boleto(
+            nosso_numero=nosso_numero,
+            motivo=motivo,
+            configs=self.configs,
+            token=self.auth_token,
+        )
