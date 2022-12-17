@@ -1,24 +1,29 @@
 from datetime import date
+from unittest.mock import Mock, patch
 
-import pytest
-from prettyprinter import install_extras, pprint
-from pyinterboleto import Boleto, RequestConfigs
-from pyinterboleto.consulta.lista import FiltrarEnum, OrdenarEnum
-
-install_extras()
+from src.pyinterboleto import Boleto, RequestConfigs
+from src.pyinterboleto.consulta.lista import SituacaoEnum
+from tests.query.detail import get_mocked_detail_response
 
 
-def ordering_naming(value) -> str:
-    if isinstance(value, OrdenarEnum):
-        return value.value
+def get_mocked_list_response():
+    return {
+        "totalPages": 1,
+        "totalElements": 4,
+        "last": True,
+        "first": True,
+        "size": 100,
+        "numberOfElements": 4,
+        "content": [
+            get_mocked_detail_response(),
+            get_mocked_detail_response(),
+            get_mocked_detail_response(),
+            get_mocked_detail_response(),
+        ],
+    }
 
-    return value
 
-
-@pytest.mark.parametrize('enum', list(OrdenarEnum), ids=ordering_naming)
-def test_ordering(request_configs: RequestConfigs, enum: OrdenarEnum):
-    """I have no idea the criteria Inter uses to sort entries when the fields
-    sorted have the same values. So, this acts as a smoke test for now."""
+def test_get_list(request_configs: RequestConfigs, patched_auth_request: Mock):
     boleto = Boleto(request_configs)
 
     today: date = date.today()
@@ -28,59 +33,20 @@ def test_ordering(request_configs: RequestConfigs, enum: OrdenarEnum):
     inicial = date(year, 1, 1)
     final = today
 
-    default_list = boleto.consulta_lista(inicial, final)
+    situacao = (SituacaoEnum.VENCIDO,)
 
-    lista = boleto.consulta_lista(inicial, final, ordenar=enum)
+    with patch("src.pyinterboleto.consulta.lista.get") as patched_get:
+        mocked_reponse = Mock()
+        mocked_reponse.status_code = 200
+        mocked_reponse.json = Mock(return_value=get_mocked_list_response())
+        patched_get.return_value = mocked_reponse
 
-    if enum == OrdenarEnum.NNA:
-        assert default_list == lista
-    else:
-        assert default_list != lista
+        result = boleto.consulta_lista(
+            inicial, final, situacao=situacao, tipo_ordenacao="ASC"
+        )
 
+        assert result.totalPages == 1
+        assert result.totalElements == 4
 
-def filtering_naming(value) -> str:
-    if isinstance(value, FiltrarEnum):
-        return value.value
-
-    return value
-
-
-@pytest.mark.parametrize('enum', list(FiltrarEnum), ids=filtering_naming)
-def test_filtering(request_configs: RequestConfigs, enum: FiltrarEnum):
-    boleto = Boleto(request_configs)
-
-    today: date = date.today()
-
-    year: int = today.year
-
-    inicial = date(year, 1, 1)
-    final = today
-
-    default_list = boleto.consulta_lista(inicial, final)
-    lista = boleto.consulta_lista(inicial, final, filtrar=enum)
-
-    if enum == FiltrarEnum.T:
-        assert default_list == lista
-    else:
-        assert default_list != lista
-
-
-@pytest.mark.parametrize('size', list(range(1, 8)))
-def test_size(request_configs: RequestConfigs, size: int):
-    boleto = Boleto(request_configs)
-
-    today: date = date.today()
-
-    year: int = today.year
-
-    inicial = date(year, 1, 1)
-    final = today
-
-    lista = boleto.consulta_lista(inicial, final, size=size)
-
-    assert lista.numberOfElements == size
-
-
-@pytest.mark.skip(reason="Não há boletos emitidos suficiente para mais de 1 página")
-def test_page_number():
-    assert False
+    patched_auth_request.assert_called_once()
+    patched_get.assert_called_once()

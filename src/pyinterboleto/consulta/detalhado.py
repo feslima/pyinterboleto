@@ -22,12 +22,12 @@ class BoletoPagador:
     tipoPessoa: str
     nome: str
     endereco: str
-    cidade: str
-    uf: str
-    cep: str
     numero: str
     complemento: str
     bairro: str
+    cidade: str
+    uf: str
+    cep: str
     email: str
     ddd: str
     telefone: str
@@ -41,8 +41,8 @@ class BoletoDetail(ConvertDateMixin, ConvertDatetimeMixin):
     cnpjCpfBeneficiario: str
     tipoPessoaBeneficiario: str
     contaCorrente: str
-    seuNumero: str
     nossoNumero: str
+    seuNumero: str
     pagador: BoletoPagador
     motivoCancelamento: str
     situacao: str
@@ -61,7 +61,6 @@ class BoletoDetail(ConvertDateMixin, ConvertDatetimeMixin):
     desconto3: DescontoConsulta
     multa: MultaConsulta
     mora: MoraConsulta
-    valorAbatimento: float
 
     def __post_init__(self):
         self.convert_date("dataVencimento")

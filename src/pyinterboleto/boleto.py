@@ -1,11 +1,17 @@
 from datetime import date
 from io import BytesIO
-from typing import Optional, Union, overload
+from typing import Iterable, Literal, Optional, Union, overload
 
 from .auth import get_auth_token
 from .baixa import CodigoBaixaEnum, executa_baixa
 from .consulta.detalhado import BoletoDetail, get_boleto_detail
-from .consulta.lista import FiltrarEnum, OrdenarEnum, ResponseList, get_lista_boletos
+from .consulta.lista import (
+    FiltrarDataPorEnum,
+    OrdenarEnum,
+    ResponseList,
+    SituacaoEnum,
+    get_lista_boletos,
+)
 from .consulta.pdf import get_pdf_boleto_in_memory, get_pdf_boleto_to_file
 from .emissao.emissor import BoletoResponse, Emissao, emitir_boleto
 from .utils.requests import PathType, RequestConfigs
@@ -164,6 +170,8 @@ class Boleto:
         seja, as informações do boleto são consultadas diretamente na CIP
         refletindo a situação em tempo real.
 
+        Escopo requerido: ScopeEnum.BOLETO_COBRANCA_READ
+
         Parameters
         ----------
         nosso_numero : str
@@ -189,37 +197,12 @@ class Boleto:
         >>> # client_id e client_secret são obtidos de acordo com a documentação do Inter
         >>> client_id = 'valor-do-id-uuid'
         >>> client_secret = 'valor-do-secret-uuid'
-        >>> scopes = (ScopeEnum.EXTRATO_READ, ScopeEnum.BOLETO_COBRANCA_READ)
+        >>> scopes = (ScopeEnum.BOLETO_COBRANCA_READ,)
         >>> configs = RequestConfigs(client_id=client_id, client_secret=client_secret, scopes=scopes, certificate=cert, key=key)
         >>> boleto = Boleto(configs)
         >>> num_boleto = '00123456789'
         >>> detail = boleto.consulta_detalhada(num_boleto)
         >>> pprint(detail)
-        {'cnpjCpfBeneficiario': '00000000000000',
-         'cnpjCpfPagador': '12345678909',
-         'codigoBarras': '00000000000000000000000000000000000000000000',
-         'codigoEspecie': 'OUTROS',
-         'dataEmissao': '01/05/2021',
-         'dataHoraSituacao': '01/05/2021 15:22',
-         'dataLimitePagamento': '11/06/2021',
-         'dataVencimento': '12/05/2021',
-         'dddPagador': '',
-         'desconto1': Desconto(codigoDesconto=<CodigoDescontoEnum.NTD: 'NAOTEMDESCONTO'>, taxa=0.0, valor=0.0, data=''),
-         'desconto2': Desconto(codigoDesconto=<CodigoDescontoEnum.NTD: 'NAOTEMDESCONTO'>, taxa=0.0, valor=0.0, data=''),
-         'desconto3': Desconto(codigoDesconto=<CodigoDescontoEnum.NTD: 'NAOTEMDESCONTO'>, taxa=0.0, valor=0.0, data=''),
-         'emailPagador': '',
-         'linhaDigitavel': '00000000000000000000000000000000000000000000000',
-         'mora': Mora(codigoMora=<CodigoMoraEnum.I: 'ISENTO'>, taxa=0.0, valor=0.0, data=''),
-         'multa': Multa(codigoMulta=<CodigoMultaEnum.NTM: 'NAOTEMMULTA'>, taxa=0.0, valor=0.0, data=''),
-         'nomeBeneficiario': 'NOME DO BENEFICIARIO CONTA PJ',
-         'nomePagador': 'Pessoa Ficticia da Silva',
-         'seuNumero': '00001',
-         'situacao': 'EMABERTO',
-         'telefonePagador': '',
-         'tipoPessoaBeneficiario': 'JURIDICA',
-         'tipoPessoaPagador': 'FISICA',
-         'valorAbatimento': 0.0,
-         'valorNominal': 0.01}
 
         """
         detail = get_boleto_detail(nosso_numero, self.configs, self.auth_token)
@@ -238,6 +221,8 @@ class Boleto:
         self, nosso_numero: str, filename: Optional[PathType] = None
     ) -> Optional[BytesIO]:
         """Captura o boleto em um buffer na memória ou em arquivo.
+
+        Escopo requerido: ScopeEnum.BOLETO_COBRANCA_READ
 
         Parameters
         ----------
@@ -267,15 +252,13 @@ class Boleto:
         >>> # client_id e client_secret são obtidos de acordo com a documentação do Inter
         >>> client_id = 'valor-do-id-uuid'
         >>> client_secret = 'valor-do-secret-uuid'
-        >>> scopes = (ScopeEnum.EXTRATO_READ, ScopeEnum.BOLETO_COBRANCA_READ)
+        >>> scopes = (ScopeEnum.BOLETO_COBRANCA_READ,)
         >>> configs = RequestConfigs(client_id=client_id, client_secret=client_secret, scopes=scopes, certificate=cert, key=key)
         >>> boleto = Boleto(configs)
         >>> configs = RequestConfigs(conta_inter=acc, certificate=cert, key=key)
         >>> boleto = Boleto(configs)
         >>> num_boleto = '00123456789'
         >>> pdf = boleto.consulta_pdf(num_boleto)
-        >>> print(pdf)
-        <_io.BytesIO object at 0x7fab0c068220>
 
         """
         pdf: Union[None, BytesIO]
@@ -293,16 +276,23 @@ class Boleto:
         self,
         data_inicial: date,
         data_final: date,
-        filtrar: Optional[FiltrarEnum] = None,
-        ordenar: Optional[OrdenarEnum] = None,
-        page: Optional[int] = None,
-        size: Optional[int] = None,
+        filtrar_data_por: FiltrarDataPorEnum = FiltrarDataPorEnum.VENCIMENTO,
+        situacao: Optional[Iterable[SituacaoEnum]] = None,
+        nome: Optional[str] = None,
+        email: Optional[str] = None,
+        cpf_cnpj: Optional[str] = None,
+        itens_por_pagina: int = 100,
+        pagina_atual: int = 0,
+        ordenar: OrdenarEnum = OrdenarEnum.PAGADOR,
+        tipo_ordenacao: Literal["ASC", "DESC"] = "ASC",
     ) -> ResponseList:
         """Recupera uma coleção de boletos por um período específico, de acordo
         com os parametros informados.
 
         Está pesquisa retorna os boletos no padrão D+1, ou seja, os boletos
         inseridos na data atual só serão visíveis a partir do dia seguinte.
+
+        Escopo requerido: ScopeEnum.BOLETO_COBRANCA_READ
 
         Parameters
         ----------
@@ -312,23 +302,45 @@ class Boleto:
             data de vencimento A PARTIR desta data.
 
         data_final : date
-            Data de fim para o filtro. Esta data corresponde a data de
-            vencimento dos títulos. Isto é, a filtragem vai incluir títulos com
-            data de vencimento ATÉ esta data.
+            Data de fim para o filtro. Esta data corresponde a data de vencimento
+            dos títulos. Isto é, a filtragem vai incluir títulos com data de
+            vencimento até esta data.
 
-        filtrar : Optional[FiltrarEnum], optional
-            Opção para situação atual do boleto, None caso não seja
+        filtrar_data_por : FiltrarDataPorEnum, optional
+            Veja documentação do enum FiltrarDataPorEnum, VENCIMENTO caso não seja
             especificado.
 
-        ordenar : Optional[OrdenarEnum], optional
-            Opção de ordenação do retorno da consulta, None caso não seja
+        situacao : Optional[Iterable[SituacaoEnum]], optional
+            Filtro pela situação da cobrança. Aceita multiplos valores, None caso não
+            seja especificado.
+
+        nome : Optional[str], optional
+            Filtro pelo nome do pagador, None caso não seja especificado.
+
+        email : Optional[str], optional
+            Filtro pelo email do pagador, None caso não seja especificado.
+
+        cpf_cnpj : Optional[str], optional
+            Filtro pelo CPF ou CNPJ do pagador, None caso não seja especificado.
+
+        ordenar : OrdenarEnum, optional
+            Opção de ordenação do retorno da consulta, PAGADOR caso não seja
             especificado.
 
-        page : Optional[int], optional
-            Número da página, None caso não seja especificado. Valor máximo: 20.
+        itens_por_pagina : int, optional
+            Quantidade máxima de registros retornados em cada página. Apenas a última
+            página pode conter uma quantidade menor de registros, 100 itens caso não
+            seja especificado.
 
-        size : Optional[int], optional
-            Tamanho da página, None caso não seja especificado.
+            Valor mínimo: 1
+            Valor máximo: 1000
+
+        pagina_atual : int, optional
+            Página a ser retornada pela consulta. Se não informada, assumirá que será 0.
+
+        tipo_ordenacao : 'ASC' | 'DESC', optional
+            Opção para tipo de ordenação, 'ASC' caso não seja especificado.
+
 
         Returns
         -------
@@ -347,59 +359,28 @@ class Boleto:
         >>> # client_id e client_secret são obtidos de acordo com a documentação do Inter
         >>> client_id = 'valor-do-id-uuid'
         >>> client_secret = 'valor-do-secret-uuid'
-        >>> scopes = (ScopeEnum.EXTRATO_READ, ScopeEnum.BOLETO_COBRANCA_READ)
+        >>> scopes = (ScopeEnum.BOLETO_COBRANCA_READ,)
         >>> configs = RequestConfigs(client_id=client_id, client_secret=client_secret, scopes=scopes, certificate=cert, key=key)
         >>> boleto = Boleto(configs)
         >>> inicial = date.today() - timedelta(days=30)
         >>> final = date.today()
         >>> lista = boleto.consulta_lista(inicial, final)
         >>> pprint(lista)
-        {'content': [{'cnpjCpfSacado': '12345678909',
-            'dataEmissao': '09/01/2021',
-            'dataLimite': '10/02/2021',
-            'dataVencimento': '21/01/2021',
-            'desconto1': {'codigo': 'NAOTEMDESCONTO',
-                        'taxa': 0.0,
-                        'valor': 0.0},
-            'desconto2': {'codigo': 'NAOTEMDESCONTO',
-                        'taxa': 0.0,
-                        'valor': 0.0},
-            'desconto3': {'codigo': 'NAOTEMDESCONTO',
-                        'taxa': 0.0,
-                        'valor': 0.0},
-            'email': '',
-            'linhaDigitavel': '00000000000000000000000000000000000000000000000',
-            'mora': {'codigo': 'ISENTO', 'taxa': 0.0, 'valor': 0.0},
-            'multa': {'codigo': 'NAOTEMMULTA', 'taxa': 0.0, 'valor': 0.0},
-            'nomeSacado': 'Pessoa Ficticia da Silva',
-            'nossoNumero': '00000000000',
-            'seuNumero': '00001',
-            'situacao': 'EMABERTO',
-            'telefone': '',
-            'valorAbatimento': 0.0,
-            'valorJuros': 0.0,
-            'valorMulta': 0.0,
-            'valorNominal': 0.01}],
-            'first': True,
-            'last': True,
-            'numberOfElements': 1,
-            'size': 20,
-            'summary': {'baixados': {'quantidade': 0, 'valor': 0},
-                        'expirados': {'quantidade': 0, 'valor': 0},
-                        'previstos': {'quantidade': 1, 'valor': 0.01},
-                        'recebidos': {'quantidade': 0, 'valor': 0}},
-            'totalElements': 1,
-            'totalPages': 1}
-
         """
         lista = get_lista_boletos(
-            data_inicial,
-            data_final,
-            self.configs,
-            filtrar=filtrar,
+            token=self.auth_token,
+            configs=self.configs,
+            data_inicial=data_inicial,
+            data_final=data_final,
+            filtrar_data_por=filtrar_data_por,
+            situacao=situacao,
+            nome=nome,
+            email=email,
+            cpf_cnpj=cpf_cnpj,
+            itens_por_pagina=itens_por_pagina,
+            pagina_atual=pagina_atual,
             ordenar=ordenar,
-            page=page,
-            size=size,
+            tipo_ordenacao=tipo_ordenacao,
         )
         return lista
 

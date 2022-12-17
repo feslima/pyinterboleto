@@ -44,7 +44,6 @@ def get_mocked_detail_response():
         "desconto3": {"codigo": "NAOTEMDESCONTO", "taxa": 0.00, "valor": 0.00},
         "multa": {"codigo": "NAOTEMMULTA", "taxa": 0.00, "valor": 0.00},
         "mora": {"codigo": "ISENTO", "taxa": 0.00, "valor": 0.00},
-        "valorAbatimento": 10.00,
     }
 
 
