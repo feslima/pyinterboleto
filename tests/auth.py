@@ -13,7 +13,7 @@ def test_payload_builder():
     body = build_auth_body(str(c_id), str(c_secret), scopes)
     expected_string = (
         f"client_id={c_id}&client_secret={c_secret}"
-        "&scope=extrato.read boleto-cobranca.read&grant_type=client_credentials"
+        "&scope=extrato.read+boleto-cobranca.read&grant_type=client_credentials"
     )
     assert body == expected_string
 
