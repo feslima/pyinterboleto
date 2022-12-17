@@ -16,6 +16,14 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Setup Node.js
+        uses: actions/setup-node@v1
+        with:
+          node-version: 18
+
+      - name: Install semantic-release
+        run: npm install -g semantic-release @semantic-release/git @google/semantic-release-replace-plugin
+
       - name: Setup poetry
         run: pipx install poetry
 
@@ -38,6 +46,7 @@ jobs:
 
       - name: Release if running on main
         if: ${{ success() && github.ref == 'refs/heads/main' }}
-        uses: bjoluc/semantic-release-config-poetry@v2
-        with:
-          pypi_token: ${{ secrets.PYPI_API_TOKEN }}
+        run: npx semantic-release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PYPI_TOKEN: ${{ secrets.PYPI_API_TOKEN }}
