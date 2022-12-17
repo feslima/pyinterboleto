@@ -24,6 +24,10 @@ class ScopeEnum(str, Enum):
     PAGAMENTO_BOLETO_WRITE = "pagamento-boleto.write"
     PAGAMENTO_DARF_WRITE = "pagamento-darf.write"
 
+    @classmethod
+    def get_all_scopes(cls) -> Tuple["ScopeEnum", ...]:
+        return tuple(cls)
+
 
 class RequestConfigs(TypedDict):
     """Dicionário contendo as configurações necessárias para se comunicar com a

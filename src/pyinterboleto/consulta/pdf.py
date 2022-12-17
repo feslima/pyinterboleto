@@ -9,7 +9,9 @@ from ..utils.requests import PathType, RequestConfigs
 from ..utils.url import API_URL
 
 
-def get_pdf_boleto_in_memory(nosso_numero: str, configs: RequestConfigs) -> BytesIO:
+def get_pdf_boleto_in_memory(
+    nosso_numero: str, configs: RequestConfigs, token: str
+) -> BytesIO:
     """Captura o boleto em um buffer na memória.
 
     Parameters
@@ -20,6 +22,9 @@ def get_pdf_boleto_in_memory(nosso_numero: str, configs: RequestConfigs) -> Byte
     configs : RequestConfigs
         Dicionário de configuração com número de conta e certificados de
         autenticação.
+    token : str
+        Token de autenticação da API do Banco Inter. Veja:
+        https://developers.bancointer.com.br/reference/obtertoken
 
     Returns
     -------
@@ -31,7 +36,7 @@ def get_pdf_boleto_in_memory(nosso_numero: str, configs: RequestConfigs) -> Byte
     ValueError
         Não foi possível obter uma resposta bem sucedida
     """
-    token, certificate, key = get_api_configs(configs)
+    certificate, key = get_api_configs(configs)
 
     headers = {"Authorization": f"Bearer {token}"}
 
@@ -46,7 +51,7 @@ def get_pdf_boleto_in_memory(nosso_numero: str, configs: RequestConfigs) -> Byte
 
 
 def get_pdf_boleto_to_file(
-    nosso_numero: str, filename: PathType, configs: RequestConfigs
+    nosso_numero: str, filename: PathType, configs: RequestConfigs, token: str
 ) -> None:
     """Salva o boleto em um arquivo .pdf.
 
@@ -61,6 +66,9 @@ def get_pdf_boleto_to_file(
     configs : RequestConfigs
         Dicionário de configuração com número de conta e certificados de
         autenticação.
+    token : str
+        Token de autenticação da API do Banco Inter. Veja:
+        https://developers.bancointer.com.br/reference/obtertoken
 
     Raises
     ------
@@ -78,6 +86,6 @@ def get_pdf_boleto_to_file(
     if filename.suffix != ".pdf":
         raise ValueError("Extensão do arquivo deve ser .pdf.")
 
-    pdf_bytes = get_pdf_boleto_in_memory(nosso_numero, configs)
+    pdf_bytes = get_pdf_boleto_in_memory(nosso_numero, configs, token)
 
     filename.write_bytes(pdf_bytes.getbuffer())

@@ -2,6 +2,7 @@ from datetime import date
 from io import BytesIO
 from typing import Optional, Union, overload
 
+from .auth import get_auth_token
 from .baixa import CodigoBaixaEnum, executa_baixa
 from .consulta.detalhado import BoletoDetail, get_boleto_detail
 from .consulta.lista import FiltrarEnum, OrdenarEnum, ResponseList, get_lista_boletos
@@ -37,6 +38,7 @@ class Boleto:
         self._configs = configs
         self._emitido: bool = False
         self._numero: str = ""
+        self._auth_token: str = ""
 
     def __str__(self) -> str:
         numero = self.numero if self.numero != "" else "não tem"
@@ -48,6 +50,17 @@ class Boleto:
         )
 
         return string
+
+    @property
+    def auth_token(self) -> str:
+        """Token de autenticação utilizado nas operações relacionadas a boletos.
+        Se a requisição de obtenção de token ainda não foi chamada (e.g. esta
+        classe foi instanciada mas não teve nenhuma operação realizada) uma
+        requisição de authenticação será feita."""
+        if getattr(self, "_auth_token", "") == "":
+            self._auth_token = get_auth_token(self.configs)
+
+        return self._auth_token
 
     @property
     def configs(self) -> RequestConfigs:
@@ -209,7 +222,7 @@ class Boleto:
          'valorNominal': 0.01}
 
         """
-        detail = get_boleto_detail(nosso_numero, self.configs)
+        detail = get_boleto_detail(nosso_numero, self.configs, self.auth_token)
         self._numero = nosso_numero
         return detail
 
@@ -267,9 +280,11 @@ class Boleto:
         """
         pdf: Union[None, BytesIO]
         if filename is None:
-            pdf = get_pdf_boleto_in_memory(nosso_numero, self.configs)
+            pdf = get_pdf_boleto_in_memory(nosso_numero, self.configs, self.auth_token)
         else:
-            pdf = get_pdf_boleto_to_file(nosso_numero, filename, self.configs)
+            pdf = get_pdf_boleto_to_file(
+                nosso_numero, filename, self.configs, self.auth_token
+            )
 
         self._numero = nosso_numero
         return pdf

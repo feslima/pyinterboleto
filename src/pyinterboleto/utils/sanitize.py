@@ -51,15 +51,15 @@ def check_response(
 
 
 def str_to_date(value: str) -> date:
-    """Converts a string representation of a date in dd/mm/YYYY format into
+    """Converts a string representation of a date in YYYY-MM-DD format into
     date object."""
-    return datetime.strptime(value, "%d/%m/%Y").date()
+    return datetime.strptime(value, "%Y-%m-%d").date()
 
 
 def str_to_datetime(value: str) -> datetime:
     """Converts a string representation of a datetime in dd/mm/YYYY HH:MM
     format into datetime object."""
-    return datetime.strptime(value, "%d/%m/%Y %H:%M")
+    return datetime.strptime(value, "%Y-%m-%d %H:%M")
 
 
 class ConvertDateMixin:
