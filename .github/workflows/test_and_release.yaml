@@ -22,7 +22,7 @@ jobs:
           node-version: 18
 
       - name: Install semantic-release
-        run: npm install -g semantic-release @semantic-release/git @google/semantic-release-replace-plugin
+        run: npm install -g semantic-release @semantic-release/exec @semantic-release/git @google/semantic-release-replace-plugin
 
       - name: Setup poetry
         run: pipx install poetry
