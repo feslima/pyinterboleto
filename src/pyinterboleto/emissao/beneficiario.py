@@ -8,8 +8,8 @@ from ..utils.sanitize import sanitize_cep, sanitize_cnpj, sanitize_cpf
 
 
 @dataclass
-class Pagador:
-    """Define a representação de um objeto pagador requerido pela API.
+class Beneficiario:
+    """Define a representação de um objeto beneficiário requerido pela API.
 
     Parameters
     ----------
@@ -32,11 +32,8 @@ class Pagador:
     endereco : str
         Endereço da pessoa.
 
-    numero : str, optional
-        Número da pessoa, string vazio ('') por valor padrão.
-
-    bairro : str, optional
-        Bairro da pessoa, string vazio ('') por valor padrão.
+    bairro : str
+        Bairro da pessoa.
 
     cidade : str
         Cidade da pessoa.
@@ -48,15 +45,6 @@ class Pagador:
         CEP da pessoa. Aceita pontuação ('-'). Esta pontuação é removida na
         validação.
 
-    email : str, optional
-        E-mail da pessoa, string vazio ('') por valor padrão.
-
-    ddd : str, optional
-        DDD do telefone da pessoa, string vazio ('') por valor padrão.
-
-    telefone : str, optional
-        Telefone da pessoa, string vazio ('') por valor padrão.
-
     Notes
     -----
     - Validações de tamanho máximo de strings são feita no __post_init__,
@@ -67,16 +55,10 @@ class Pagador:
     tipoPessoa: Union[str, TipoPessoa]
     nome: str
     endereco: str
+    bairro: str
     cidade: str
     uf: str
     cep: str
-
-    numero: str = ""
-    complemento: str = ""
-    bairro: str = ""
-    email: str = ""
-    ddd: str = ""
-    telefone: str = ""
 
     def __post_init__(self):
         self.tipoPessoa = TipoPessoa(self.tipoPessoa)
@@ -88,21 +70,15 @@ class Pagador:
             self.cpfCnpj = sanitize_cnpj(self.cpfCnpj)
             assert len(self.cpfCnpj) == 14
 
-        assert self.nome and 1 <= len(self.nome) <= 100
-        assert self.endereco and 1 <= len(self.endereco) <= 100
-        assert len(self.numero) <= 10
-        assert len(self.complemento) <= 30
-        assert len(self.bairro) <= 60
+        assert 1 <= len(self.nome) <= 100
+        assert 1 <= len(self.endereco) <= 100
+        assert 1 <= len(self.bairro) <= 60
 
-        assert self.cidade and len(self.cidade) <= 60
-        assert self.uf and len(self.uf) == 2
+        assert 1 <= len(self.cidade) <= 60
+        assert len(self.uf) == 2
 
         self.cep = sanitize_cep(self.cep)
-        assert self.cep and len(self.cep) == 8
-
-        assert len(self.email) <= 50
-        assert self.ddd == "" or len(self.ddd) == 2
-        assert len(self.telefone) <= 9
+        assert len(self.cep) == 8
 
         # strip accents
         for field in fields(self):

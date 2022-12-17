@@ -1,7 +1,7 @@
 # PyInterBoleto
 Biblioteca para facilitar o manuseio de boletos de contas PJ no Banco Inter.
 
-[![PyPI version](https://badge.fury.io/py/pyinterboleto.svg)](https://badge.fury.io/py/pyinterboleto)
+[![PyPI version](https://badge.fury.io/py/pyinterboleto.svg)](https://badge.fury.io/py/pyinterboleto) [![codecov](https://codecov.io/gh/feslima/pyinterboleto/branch/main/graph/badge.svg?token=T2SJ0P8KPG)](https://codecov.io/gh/feslima/pyinterboleto)
 
 ***
 - [PyInterBoleto](#pyinterboleto)
@@ -32,7 +32,7 @@ Sendo assim, o pacote está organizado em três submódulos principais: **emiss�
 
 Em cada um desses links se encontram as funções e objetos com suas respectivas documentações, caso seja preciso mais informações.
 # Usagem básica
-A classe principal que tem todas as funcionalidades requeridas para a API se chama [**`Boleto`**](src/pyinterboleto/boleto.py). Através dela que todas as operações de emissão, consulta e baixa feitas. 
+A classe principal que tem todas as funcionalidades requeridas para a API se chama [**`Boleto`**](src/pyinterboleto/boleto.py). Através dela que todas as operações de emissão, consulta e baixa feitas.
 
 No entanto, como consta na documentação do Banco Inter, para se ter acesso a API é preciso emitir a chave e o certificado de acesso desta. Antes de utilizar este pacote, certifique-se que você já possui estes arquivos.
 
@@ -47,48 +47,58 @@ Antes de fazer qualquer requisição à API do Inter é preciso antes definir o 
 >>> from datetime import date, timedelta
 >>> from prettyprinter import pprint, install_extras
 >>> from pyinterboleto import RequestConfigs
->>> 
+>>>
 >>> install_extras()
->>> 
+>>>
 >>> # definição da configuração de autenticação
 >>> direc = Path('caminho/para/pasta/com/certificados')
 >>> cert = direc / 'Inter API_Certificado.crt'
 >>> key = direc / 'Inter API_Chave.key'
->>> acc = '12345678' # Número da conta PJ
->>> configs = RequestConfigs(conta_inter=acc, certificate=cert, key=key)
+>>> # client_id e client_secret são obtidos de acordo com a documentação do Inter
+>>> client_id = 'valor-do-id-uuid'
+>>> client_secret = 'valor-do-secret-uuid'
+>>> scopes = (ScopeEnum.BOLETO_COBRANCA_WRITE,)
+>>> configs = RequestConfigs(client_id=client_id, client_secret=client_secret, scopes=scopes, certificate=cert, key=key)
 ```
 
 ## Emissão de boleto
 _*Os dados a seguir são fictícios. Não os utilize do jeito que estão!*_
 
 ```python
->>> from pyinterboleto import Boleto, Emissao, Pagador
+>>> from pyinterboleto import Boleto, Emissao, Pagador, Beneficiario
 >>> boleto = Boleto(configs) # configs vem da seção configuração
 >>>
 >>> pagador = Pagador(
-...     tipoPessoa='FISICA',
-...     cnpjCpf='123.456.789-09',
-...     nome="Pessoa Ficticia da Silva",
-...     endereco="Rua Fantasia",
-...     numero='300',
-...     bairro='Centro',
-...     cidade='São Paulo',
-...     uf='SP',
-...     cep='123456-789'
+...     cpfCnpj="12.345.678/0001-12",
+...     tipoPessoa=TipoPessoa.JURIDICA,
+...     nome="Alguma Empresa LTDA",
+...     endereco="Qulaquer um",
+...     cidade="Também do Brasil",
+...     uf="SP",
+...     cep="12345-678",
 ... )
->>>
->>> emissao = Emissao(
-...     pagador=pagador, seuNumero='00001',
-...     cnpjCPFBeneficiario='12.345.678/0001-01',
-...     valorNominal=0.01,
-...     dataEmissao=date.today(),
-...     dataVencimento=date.today()+timedelta(days=2)
+>>> beneficiario = Beneficiario(
+...     cpfCnpj="123.456.789-01",
+...     tipoPessoa=TipoPessoa.FISICA,
+...     nome="Algum Nome de Pessoa",
+...     endereco="Algum lugar",
+...     bairro="Qualquer",
+...     cidade="Do Brasil",
+...     uf="SP",
+...     cep="12345-678",
 ... )
->>>
+>>> dados = Emissao(
+...     pagador=pagador,
+...     beneficiario=beneficiario,
+...     seuNumero="000001",
+...     valorNominal=10.01,
+...     dataVencimento="2023-01-01",
+...     numDiasAgenda=25,
+... )
 >>> result = boleto.emitir(emissao)
 >>> print(result)
-{'seuNumero': '00001', 'nossoNumero': '00123456789', 
- 'codigoBarras': '00000000000000000000000000000000000000000000', 
+{'seuNumero': '00001', 'nossoNumero': '00123456789',
+ 'codigoBarras': '00000000000000000000000000000000000000000000',
  'linhaDigitavel': '00000000000000000000000000000000000000000000000'}
 >>>
 ```
@@ -467,7 +477,7 @@ Também é preciso saber o número de identificação do título. Os tipos de ba
 
 Como a API do Inter não possui ambiente de sandboxing, optei por não implementar rotinas de testes para todas operações, apenas as de consulta. Isto é, o Inter fornece uma cota sem custo adicional de 100 boletos emitidos por mês. Acima disto, é preciso pagar mais.
 
-Como é um recurso bem limitado, não faz sentido implementar uma suíte de testes para emissão e baixa de boletos. 
+Como é um recurso bem limitado, não faz sentido implementar uma suíte de testes para emissão e baixa de boletos.
 
 Para realizar os testes localmente, clone o repositório e crie um arquivo chamado `inter.env` na raiz do projeto que tem o seguinte formato:
 

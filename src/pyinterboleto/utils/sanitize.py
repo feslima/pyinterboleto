@@ -1,14 +1,16 @@
 import re
 from datetime import date, datetime
 from pathlib import Path
-from typing import Optional
+from typing import Optional, Union
 
 from requests import Response
 
+PathType = Union[str, Path]
+
 
 def strip_chars(value: str) -> str:
-    """Strips '.', '-' and '/' from `value`."""
-    return re.sub('[\.\-/]', '', value)
+    """Strips non numeric values from `value`."""
+    return re.sub(r"\D", "", value)
 
 
 def sanitize_cpf(value: str) -> str:
@@ -23,7 +25,7 @@ def sanitize_cep(value: str) -> str:
     return strip_chars(value)
 
 
-def check_file(path_str: str) -> Path:
+def check_file(path_str: PathType) -> Path:
     path = Path(path_str).resolve()
 
     if not path.exists() and not path.is_file():
@@ -32,11 +34,12 @@ def check_file(path_str: str) -> Path:
     return path
 
 
-def check_response(response: Response,
-                   additional_message: Optional[str] = None) -> dict:
+def check_response(
+    response: Response, additional_message: Optional[str] = None
+) -> dict:
     contents = response.json()
     if response.status_code != 200:
-        api_err = contents['message']
+        api_err = contents["message"]
         if additional_message is not None:
             msg = f"{additional_message}.\nMotivo: '{api_err}'"
         else:
@@ -48,15 +51,15 @@ def check_response(response: Response,
 
 
 def str_to_date(value: str) -> date:
-    """Converts a string representation of a date in dd/mm/YYYY format into 
+    """Converts a string representation of a date in YYYY-MM-DD format into
     date object."""
-    return datetime.strptime(value, "%d/%m/%Y").date()
+    return datetime.strptime(value, "%Y-%m-%d").date()
 
 
 def str_to_datetime(value: str) -> datetime:
-    """Converts a string representation of a datetime in dd/mm/YYYY HH:MM 
+    """Converts a string representation of a datetime in dd/mm/YYYY HH:MM
     format into datetime object."""
-    return datetime.strptime(value, "%d/%m/%Y %H:%M")
+    return datetime.strptime(value, "%Y-%m-%d %H:%M")
 
 
 class ConvertDateMixin:
