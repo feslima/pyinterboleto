@@ -55,7 +55,7 @@ def cancelar_boleto(
     certificate, key = get_api_configs(configs)
     headers = {"Content-Type": "application/json", "Authorization": f"Bearer {token}"}
 
-    URL = API_URL + f"/{nosso_numero}/baixas"
+    URL = API_URL + f"/{nosso_numero}/cancelar"
     data = {"motivoCancelamento": motivo.value}
     response = post(URL, json=data, headers=headers, cert=(certificate, key))
 
