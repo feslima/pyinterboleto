@@ -11,17 +11,18 @@ from ..utils.sanitize import ConvertDateMixin
 class CodigoMoraEnum(Enum):
     """Código de mora do título
 
-    - VD -> Valor ao dia;
-    - TM -> Taxa mensal;
-    - I -> Não há mora;
+    - VALOR_DIA -> Valor ao dia;
+    - TAXA_MENSAL -> Taxa mensal;
+    - ISENTO -> Não há mora;
     """
-    VD = 'VALORDIA'
-    TM = 'TAXAMENSAL'
-    I = 'ISENTO'
+
+    VALOR_DIA = "VALORDIA"
+    TAXA_MENSAL = "TAXAMENSAL"
+    ISENTO = "ISENTO"
 
 
 @dataclass
-class MoraConsulta:
+class MoraConsulta(ConvertDateMixin):
     """Representação de mora usado em consultas.
 
     Parameters
@@ -43,23 +44,24 @@ class MoraConsulta:
     -----
 
     Contém as seguintes validações:
-    - data:    
-        1. Obrigatório para códigos de mora (veja `CodigoMoraEnum`) `VD` e 
-        `TM`;
-        2. Deve ser vazio ('') para código `I`;
+    - data:
+        1. Obrigatório para códigos de mora (veja `CodigoMoraEnum`) `VALOR_DIA` e
+        `TAXA_MENSAL`;
+        2. Deve ser vazio ('') para código `ISENTO`;
         3. Não informar ('') para os demais códigos;
         4. Deve ser maior que vencimento e marca data de início de cobrança de
         mora (incluindo essa data) [Essa validação é feita na classe mãe que
         usa esta classe];
 
     - taxa:
-        1. Obrigatório para código de mora `TM`;
-        2. Deve ser 0 para código `I`;
+        1. Obrigatório para código de mora `TAXA_MENSAL`;
+        2. Deve ser 0 para código `ISENTO`;
 
     - valor:
-        1. Obrigatório para código de mora `VD`;
-        2. Deve ser 0 para código `NTM`;
+        1. Obrigatório para código de mora `VALOR_DIA`;
+        2. Deve ser 0 para código `ISENTO`;
     """
+
     codigo: Union[str, CodigoMoraEnum]
     taxa: float = 0.0
     valor: float = 0.0
@@ -68,23 +70,23 @@ class MoraConsulta:
     def __post_init__(self):
         self.codigo = CodigoMoraEnum(self.codigo)
 
-        if self.codigo == CodigoMoraEnum.I:
+        if self.codigo == CodigoMoraEnum.ISENTO:
             assert self.data == ""
             assert is_zero_float(self.taxa)
             assert is_zero_float(self.valor)
 
         else:
-            self.convert_date('data')
+            self.convert_date("data")
 
-            if self.codigo == CodigoMoraEnum.VD:
+            if self.codigo == CodigoMoraEnum.VALOR_DIA:
                 assert is_non_zero_positive_float(self.valor)
 
-            if self.codigo == CodigoMoraEnum.TM:
+            if self.codigo == CodigoMoraEnum.TAXA_MENSAL:
                 assert is_non_zero_positive_float(self.taxa)
 
 
 @dataclass
-class MoraEmissao:
+class MoraEmissao(ConvertDateMixin):
     """Representação de mora usado em emissões.
 
     Parameters
@@ -106,23 +108,24 @@ class MoraEmissao:
     -----
 
     Contém as seguintes validações:
-    - data:    
-        1. Obrigatório para códigos de mora (veja `CodigoMoraEnum`) `VD` e 
-        `TM`;
-        2. Deve ser vazio ('') para código `I`;
+    - data:
+        1. Obrigatório para códigos de mora (veja `CodigoMoraEnum`) `VALOR_DIA` e
+        `TAXA_MENSAL`;
+        2. Deve ser vazio ('') para código `ISENTO`;
         3. Não informar ('') para os demais códigos;
         4. Deve ser maior que vencimento e marca data de início de cobrança de
         mora (incluindo essa data) [Essa validação é feita na classe mãe que
         usa esta classe];
 
     - taxa:
-        1. Obrigatório para código de mora `TM`;
-        2. Deve ser 0 para código `I`;
+        1. Obrigatório para código de mora `TAXA_MENSAL`;
+        2. Deve ser 0 para código `ISENTO`;
 
     - valor:
-        1. Obrigatório para código de mora `VD`;
-        2. Deve ser 0 para código `NTM`;
+        1. Obrigatório para código de mora `VALOR_DIA`;
+        2. Deve ser 0 para código `ISENTO`;
     """
+
     codigoMora: Union[str, CodigoMoraEnum]
     taxa: float = 0.0
     valor: float = 0.0
@@ -131,16 +134,16 @@ class MoraEmissao:
     def __post_init__(self):
         self.codigoMora = CodigoMoraEnum(self.codigoMora)
 
-        if self.codigoMora == CodigoMoraEnum.I:
+        if self.codigoMora == CodigoMoraEnum.ISENTO:
             assert self.data == ""
             assert is_zero_float(self.taxa)
             assert is_zero_float(self.valor)
 
         else:
-            self.convert_date('data')
+            self.convert_date("data")
 
-            if self.codigoMora == CodigoMoraEnum.VD:
+            if self.codigoMora == CodigoMoraEnum.VALOR_DIA:
                 assert is_non_zero_positive_float(self.valor)
 
-            if self.codigoMora == CodigoMoraEnum.TM:
+            if self.codigoMora == CodigoMoraEnum.TAXA_MENSAL:
                 assert is_non_zero_positive_float(self.taxa)

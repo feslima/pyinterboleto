@@ -11,14 +11,14 @@ from ..utils.sanitize import ConvertDateMixin
 class CodigoMultaEnum(Enum):
     """Código de multa título.
 
-    - NTM -> Não tem multa;
-    - VF -> Valor fixo;
-    - P -> Percentual;
+    - NAO_TEM_MULTA -> Não tem multa;
+    - VALOR_FIXO -> Valor fixo;
+    - PERCENTUAL -> Percentual;
     """
 
-    NTM = "NAOTEMMULTA"
-    VF = "VALORFIXO"
-    P = "PERCENTUAL"
+    NAO_TEM_MULTA = "NAOTEMMULTA"
+    VALOR_FIXO = "VALORFIXO"
+    PERCENTUAL = "PERCENTUAL"
 
 
 @dataclass
@@ -45,21 +45,21 @@ class MultaConsulta(ConvertDateMixin):
 
     Contém as seguintes validações:
     - data:
-        1. Obrigatório para códigos de multa (veja `CodigoMultaEnum`) `VF` e
-        `P`;
-        2. Deve ser vazio ('') para código `NTM`;
+        1. Obrigatório para códigos de multa (veja `CodigoMultaEnum`) `VALOR_FIXO` e
+        `PERCENTUAL`;
+        2. Deve ser vazio ('') para código `NAO_TEM_MULTA`;
         3. Não informar ('') para os demais códigos;
         4. Deve ser maior que vencimento e marca data de início de cobrança de
         multa (incluindo essa data) [Essa validação é feita na classe mãe que
         usa esta classe];
 
     - taxa:
-        1. Obrigatório para código de multa `P`;
-        2. Deve ser 0 para código `NTM`;
+        1. Obrigatório para código de multa `PERCENTUAL`;
+        2. Deve ser 0 para código `NAO_TEM_MULTA`;
 
     - valor:
-        1. Obrigatório para código de multa `VF`;
-        2. Deve ser 0 para código `NTM`;
+        1. Obrigatório para código de multa `VALOR_FIXO`;
+        2. Deve ser 0 para código `NAO_TEM_MULTA`;
     """
 
     codigo: Union[str, CodigoMultaEnum]
@@ -70,7 +70,7 @@ class MultaConsulta(ConvertDateMixin):
     def __post_init__(self):
         self.codigo = CodigoMultaEnum(self.codigo)
 
-        if self.codigo == CodigoMultaEnum.NTM:
+        if self.codigo == CodigoMultaEnum.NAO_TEM_MULTA:
             assert self.data == ""
             assert is_zero_float(self.taxa)
             assert is_zero_float(self.valor)
@@ -78,10 +78,10 @@ class MultaConsulta(ConvertDateMixin):
         else:
             self.convert_date("data")
 
-            if self.codigo == CodigoMultaEnum.VF:
+            if self.codigo == CodigoMultaEnum.VALOR_FIXO:
                 assert is_non_zero_positive_float(self.valor)
 
-            if self.codigo == CodigoMultaEnum.P:
+            if self.codigo == CodigoMultaEnum.PERCENTUAL:
                 assert is_non_zero_positive_float(self.taxa)
 
 
@@ -109,21 +109,21 @@ class MultaEmissao(ConvertDateMixin):
 
     Contém as seguintes validações:
     - data:
-        1. Obrigatório para códigos de multa (veja `CodigoMultaEnum`) `VF` e
-        `P`;
-        2. Deve ser vazio ('') para código `NTM`;
+        1. Obrigatório para códigos de multa (veja `CodigoMultaEnum`) `VALOR_FIXO` e
+        `PERCENTUAL`;
+        2. Deve ser vazio ('') para código `NAO_TEM_MULTA`;
         3. Não informar ('') para os demais códigos;
         4. Deve ser maior que vencimento e marca data de início de cobrança de
         multa (incluindo essa data) [Essa validação é feita na classe mãe que
         usa esta classe];
 
     - taxa:
-        1. Obrigatório para código de multa `P`;
-        2. Deve ser 0 para código `NTM`;
+        1. Obrigatório para código de multa `PERCENTUAL`;
+        2. Deve ser 0 para código `NAO_TEM_MULTA`;
 
     - valor:
-        1. Obrigatório para código de multa `VF`;
-        2. Deve ser 0 para código `NTM`;
+        1. Obrigatório para código de multa `VALOR_FIXO`;
+        2. Deve ser 0 para código `NAO_TEM_MULTA`;
     """
 
     codigoMulta: Union[str, CodigoMultaEnum]
@@ -134,7 +134,7 @@ class MultaEmissao(ConvertDateMixin):
     def __post_init__(self):
         self.codigoMulta = CodigoMultaEnum(self.codigoMulta)
 
-        if self.codigoMulta == CodigoMultaEnum.NTM:
+        if self.codigoMulta == CodigoMultaEnum.NAO_TEM_MULTA:
             assert self.data == ""
             assert is_zero_float(self.taxa)
             assert is_zero_float(self.valor)
@@ -142,8 +142,8 @@ class MultaEmissao(ConvertDateMixin):
         else:
             self.convert_date("data")
 
-            if self.codigoMulta == CodigoMultaEnum.VF:
+            if self.codigoMulta == CodigoMultaEnum.VALOR_FIXO:
                 assert is_non_zero_positive_float(self.valor)
 
-            if self.codigoMulta == CodigoMultaEnum.P:
+            if self.codigoMulta == CodigoMultaEnum.PERCENTUAL:
                 assert is_non_zero_positive_float(self.taxa)

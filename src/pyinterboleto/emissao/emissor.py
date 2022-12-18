@@ -32,9 +32,9 @@ class DefaultEncoder(JSONEncoder):
 SerializedDict = Dict[str, Union[str, float]]
 
 
-SEM_DESCONTO_DICT = DescontoEmissao(codigoDesconto=CodigoDescontoEnum.NTD)
-SEM_MORA = MoraEmissao(codigoMora=CodigoMoraEnum.I)
-SEM_MULTA = MultaEmissao(codigoMulta=CodigoMultaEnum.NTM)
+SEM_DESCONTO_DICT = DescontoEmissao(codigoDesconto=CodigoDescontoEnum.NAO_TEM_DESCONTO)
+SEM_MORA = MoraEmissao(codigoMora=CodigoMoraEnum.ISENTO)
+SEM_MULTA = MultaEmissao(codigoMulta=CodigoMultaEnum.NAO_TEM_MULTA)
 
 
 @dataclass
@@ -145,10 +145,10 @@ class Emissao(ConvertDateMixin):
 
         self.convert_date("dataVencimento")
 
-        if self.multa.codigoMulta != CodigoMultaEnum.NTM:
+        if self.multa.codigoMulta != CodigoMultaEnum.NAO_TEM_MULTA:
             assert self.multa.data > self.dataVencimento
 
-        if self.mora.codigoMora != CodigoMoraEnum.I:
+        if self.mora.codigoMora != CodigoMoraEnum.ISENTO:
             assert self.mora.data > self.dataVencimento
 
     def to_dict(self) -> Dict[str, Union[str, float, SerializedDict]]:
