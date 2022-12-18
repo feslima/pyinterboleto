@@ -219,7 +219,7 @@ def emitir_boleto(
     headers = {"Content-Type": "application/json", "Authorization": f"Bearer {token}"}
 
     response = post(
-        API_URL, json=dados.to_json(), headers=headers, cert=(certificate, key)
+        API_URL, data=dados.to_json(), headers=headers, cert=(certificate, key)
     )
 
     contents = check_response(response, "Boleto não foi emitido")
