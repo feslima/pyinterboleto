@@ -185,7 +185,6 @@ como o PDF é armazendo: em memória ou salvo diretamento em um arquivo especifi
 >>> # salva em um arquivo chamado 'boleto.pdf' no diretório atual
 >>> filename = Path().resolve() / 'boleto.pdf'
 >>> boleto.consulta_pdf(num_boleto, filename)
->>>
 ```
 
 ***
