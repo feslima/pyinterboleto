@@ -5,6 +5,7 @@ from pathlib import Path
 from requests import get
 
 from ..auth import get_api_configs
+from ..exceptions import PyInterBoletoException
 from ..utils.requests import PathType, RequestConfigs
 from ..utils.url import API_URL
 
@@ -45,9 +46,12 @@ def get_pdf_boleto_in_memory(
     response = get(URL, headers=headers, cert=(certificate, key))
 
     if response.status_code != 200:
-        raise ValueError("Não foi possível resgatar as informações do boleto.")
+        raise PyInterBoletoException(
+            "Não foi possível resgatar as informações do boleto."
+        )
 
-    return BytesIO(b64decode(response.content))
+    raw_bytes = b64decode(response.json()["pdf"])
+    return BytesIO(raw_bytes)
 
 
 def get_pdf_boleto_to_file(

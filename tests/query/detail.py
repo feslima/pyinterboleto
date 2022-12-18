@@ -70,7 +70,9 @@ def test_pdf(request_configs: RequestConfigs, patched_auth_request: Mock):
     with patch("src.pyinterboleto.consulta.pdf.get") as patched_get:
         mocked_reponse = Mock()
         mocked_reponse.status_code = 200
-        mocked_reponse.content = b64encode("some dummy pdf.data".encode("utf-8"))
+        mocked_reponse.json = Mock(
+            return_value={"pdf": b64encode("some dummy pdf.data".encode("utf-8"))}
+        )
         patched_get.return_value = mocked_reponse
 
         boleto.consulta_pdf("01234567891")
