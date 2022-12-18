@@ -44,7 +44,6 @@ class BoletoDetail(ConvertDateMixin, ConvertDatetimeMixin):
     nossoNumero: str
     seuNumero: str
     pagador: BoletoPagador
-    motivoCancelamento: str
     situacao: str
     dataHoraSituacao: Union[datetime, str]
     dataVencimento: Union[date, str]

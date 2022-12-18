@@ -27,7 +27,6 @@ def get_mocked_detail_response():
             "ddd": "ddd",
             "telefone": "telefone do pagador",
         },
-        "motivoCancelamento": "motivo, caso haja",
         "situacao": "situacao do boleto",
         "dataHoraSituacao": "2022-03-08 00:00",
         "dataVencimento": "2022-01-31",
