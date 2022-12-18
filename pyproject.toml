@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "pyinterboleto"
-version = "1.0.1"
+version = "1.0.2"
 description = "Biblioteca para facilitar o manuseio de boletos de contas PJ no Banco Inter."
 authors = ["Felipe Souza Lima <feslima93@gmail.com>"]
 license = "LGPL-3.0"
